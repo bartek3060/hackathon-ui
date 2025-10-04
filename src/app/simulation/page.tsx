@@ -1,6 +1,8 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -9,39 +11,26 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { Checkbox } from "@/components/ui/checkbox";
 import { Stepper } from "@/components/ui/stepper";
-import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Separator } from "@/components/ui/separator";
-import { Badge } from "@/components/ui/badge";
+
 import { useSendEvent } from "@/hooks/mutations/useSendEvent";
 import { AppEventType } from "@/enums/app-event-types.enum";
 import { getSessionId } from "@/lib/session";
-
-interface SimulationData {
-  // Required fields
-  age: number;
-  gender: "male" | "female";
-  grossSalary: number;
-  workStartYear: number;
-  workEndYear: number;
-
-  // Optional fields
-  zusAccountFunds?: number;
-  zusSubAccountFunds?: number;
-
-  // Options
-  includeSickLeave: boolean;
-}
+import {
+  simulationFormSchema,
+  SimulationFormData,
+  SimulationFormInterface,
+} from "@/app/simulation/simulation-form.schema";
+import { z } from "zod";
+import {
+  Step1BasicInfo,
+  Step2WorkPeriod,
+  Step3AdditionalInfo,
+  Step4Review,
+  SimulationResults,
+} from "./components";
+import { useCalculatePension } from "@/hooks/mutations/useCalculatePension";
 
 interface SalaryIndexingData {
   year: number;
@@ -74,50 +63,61 @@ const SICK_LEAVE_DATA = {
   female: 18, // days per year
 };
 
+interface SimulationProjectionResult {
+  monthlyPension: number;
+  yearlyPension: number;
+  workYears: number;
+  avgSalary: number;
+  sickLeaveReduction: number;
+  sickLeaveDays: number;
+}
+
 export default function SimulationPage() {
-  const { mutate } = useSendEvent();
+  const { mutate, isPending } = useCalculatePension();
   const [currentStep, setCurrentStep] = useState(1);
-  const [simulationData, setSimulationData] = useState<SimulationData>({
-    age: 0,
-    gender: "male",
-    grossSalary: 0,
-    workStartYear: new Date().getFullYear(),
-    workEndYear: 0,
-    includeSickLeave: false,
-  });
-  const [projectionResult, setProjectionResult] = useState<any>(null);
+  const [projectionResult, setProjectionResult] =
+    useState<SimulationProjectionResult | null>(null);
   const [isCalculating, setIsCalculating] = useState(false);
 
   const totalSteps = 4;
 
-  useEffect(() => {
-    mutate({
-      eventType: AppEventType.ENTER_PAGE,
-      sessionId: getSessionId(),
-    });
-  }, [mutate]);
+  const form = useForm<SimulationFormInterface>({
+    resolver: zodResolver(simulationFormSchema),
+    defaultValues: {
+      age: 25,
+      grossSalary: 5000,
+      workStartYear: new Date().getFullYear(),
+      workEndYear: new Date().getFullYear() + 40,
+    },
+    mode: "onChange",
+    shouldUnregister: false, // Keep form values when navigating
+  });
 
-  // Auto-calculate retirement year based on age and gender
+  const {
+    control,
+    handleSubmit,
+    watch,
+    setValue,
+    getValues,
+    formState: { errors, isValid },
+  } = form;
+
+  // Watch form values for auto-calculation
+  const watchedAge = watch("age");
+  const watchedGender = watch("gender");
+
+  // Auto-calculate retirement year based on sessionId and gender
   useEffect(() => {
-    if (simulationData.age > 0 && simulationData.gender) {
-      const retirementAge = RETIREMENT_AGE[simulationData.gender];
+    if (watchedAge > 0 && watchedGender) {
+      const retirementAge =
+        RETIREMENT_AGE[watchedGender as keyof typeof RETIREMENT_AGE];
       const currentYear = new Date().getFullYear();
-      const yearsToRetirement = retirementAge - simulationData.age;
+      const yearsToRetirement = retirementAge - watchedAge;
       const retirementYear = currentYear + yearsToRetirement;
 
-      setSimulationData((prev) => ({
-        ...prev,
-        workEndYear: retirementYear,
-      }));
+      setValue("workEndYear", retirementYear, { shouldDirty: false });
     }
-  }, [simulationData.age, simulationData.gender]);
-
-  const handleInputChange = (field: keyof SimulationData, value: any) => {
-    setSimulationData((prev) => ({
-      ...prev,
-      [field]: value,
-    }));
-  };
+  }, [watchedAge, watchedGender, setValue]);
 
   const formatCurrency = (value: string) => {
     const numbers = value.replace(/\D/g, "");
@@ -125,29 +125,29 @@ export default function SimulationPage() {
     return new Intl.NumberFormat("pl-PL").format(parseInt(numbers));
   };
 
-  const handleCurrencyChange = (
-    field: keyof SimulationData,
-    e: React.ChangeEvent<HTMLInputElement>
-  ) => {
-    const value = e.target.value.replace(/\D/g, "");
-    handleInputChange(field, value ? parseInt(value) : 0);
-  };
-
   const isStepValid = (step: number): boolean => {
+    const formValues = watch();
+
     switch (step) {
+      case 0:
+        return (
+          formValues.age > 0 &&
+          formValues.gender !== undefined &&
+          formValues.grossSalary > 0 &&
+          !errors.age &&
+          !errors.gender &&
+          !errors.grossSalary
+        );
       case 1:
         return (
-          simulationData.age > 0 &&
-          simulationData.gender &&
-          simulationData.grossSalary > 0
+          formValues.workStartYear > 0 &&
+          formValues.workEndYear > 0 &&
+          !errors.workStartYear &&
+          !errors.workEndYear
         );
       case 2:
-        return (
-          simulationData.workStartYear > 0 && simulationData.workEndYear > 0
-        );
-      case 3:
         return true; // Optional fields
-      case 4:
+      case 3:
         return true; // Review step
       default:
         return false;
@@ -161,53 +161,62 @@ export default function SimulationPage() {
   };
 
   const prevStep = () => {
-    if (currentStep > 1) {
+    if (currentStep > 0) {
       setCurrentStep((prev) => prev - 1);
     }
   };
 
-  const calculateProjection = async () => {
-    setIsCalculating(true);
+  const handleStepClick = (stepIndex: number) => {
+    // Allow navigation to any step that is valid or already completed
+    // Step 0 is always accessible (basic info)
+    // Allow going back to any previous step
+    // Allow going forward only if current step is valid
+    if (
+      stepIndex === 0 ||
+      stepIndex < currentStep ||
+      (stepIndex === currentStep + 1 && isStepValid(currentStep))
+    ) {
+      setCurrentStep(stepIndex);
+    }
+  };
 
-    // Simulate API call delay
-    await new Promise((resolve) => setTimeout(resolve, 2000));
-
-    // Calculate projected pension (simplified calculation)
-    const workYears = simulationData.workEndYear - simulationData.workStartYear;
-    const avgSalary = calculateAverageSalary();
-    const sickLeaveReduction = simulationData.includeSickLeave
-      ? calculateSickLeaveReduction()
+  const calculateProjection = async (data: SimulationFormInterface) => {
+    const workYears = data.workEndYear - data.workStartYear;
+    const avgSalary = calculateAverageSalary(data);
+    const sickLeaveReduction = data.includeSickLeave
+      ? calculateSickLeaveReduction(data)
       : 0;
 
     // Simplified pension calculation (this would be more complex in reality)
     const basePension = (avgSalary * 0.24 * workYears) / 12; // 24% contribution rate
     const finalPension = basePension * (1 - sickLeaveReduction);
 
-    setProjectionResult({
-      monthlyPension: Math.round(finalPension),
-      yearlyPension: Math.round(finalPension * 12),
-      workYears,
-      avgSalary: Math.round(avgSalary),
-      sickLeaveReduction: Math.round(sickLeaveReduction * 100),
-      sickLeaveDays: simulationData.includeSickLeave
-        ? simulationData.gender === "male"
-          ? SICK_LEAVE_DATA.male
-          : SICK_LEAVE_DATA.female
-        : 0,
-    });
+    // Convert to DTO format for API call
+    const currentYear = new Date().getFullYear();
+    const birthDate = new Date(currentYear - data.age, 0, 1);
+    const workStartDate = new Date(data.workStartYear, 0, 1);
+    const workEndDate = new Date(data.workEndYear, 0, 1);
 
-    setIsCalculating(false);
+    const dtoPayload = {
+      age: data.age,
+      gender: data.gender || "male",
+      birthDate,
+      grossSalary: data.grossSalary,
+      workStartYear: workStartDate,
+      plannedWorkEndYear: workEndDate,
+      amountOfMoneyInZusAccount: data.zusAccountFunds || 0,
+      amountOfMoneyInZusSubAccount: data.zusSubAccountFunds || 0,
+      includeSickLeave: data.includeSickLeave || false,
+    };
+
+    mutate(dtoPayload);
   };
 
-  const calculateAverageSalary = (): number => {
-    let currentSalary = simulationData.grossSalary;
+  const calculateAverageSalary = (data: SimulationFormInterface): number => {
+    let currentSalary = data.grossSalary;
     let totalSalary = 0;
 
-    for (
-      let year = simulationData.workStartYear;
-      year < simulationData.workEndYear;
-      year++
-    ) {
+    for (let year = data.workStartYear; year < data.workEndYear; year++) {
       totalSalary += currentSalary;
       // Apply salary growth for next year
       const growthData = SALARY_GROWTH_DATA.find((d) => d.year === year);
@@ -218,17 +227,15 @@ export default function SimulationPage() {
       }
     }
 
-    return (
-      totalSalary / (simulationData.workEndYear - simulationData.workStartYear)
-    );
+    return totalSalary / (data.workEndYear - data.workStartYear);
   };
 
-  const calculateSickLeaveReduction = (): number => {
+  const calculateSickLeaveReduction = (
+    data: SimulationFormInterface
+  ): number => {
     const sickDaysPerYear =
-      simulationData.gender === "male"
-        ? SICK_LEAVE_DATA.male
-        : SICK_LEAVE_DATA.female;
-    const workYears = simulationData.workEndYear - simulationData.workStartYear;
+      data.gender === "male" ? SICK_LEAVE_DATA.male : SICK_LEAVE_DATA.female;
+    const workYears = data.workEndYear - data.workStartYear;
     const totalSickDays = sickDaysPerYear * workYears;
     const totalWorkingDays = workYears * 250; // Approximate working days per year
 
@@ -239,348 +246,36 @@ export default function SimulationPage() {
     switch (currentStep) {
       case 1:
         return (
-          <div className="space-y-6">
-            <div className="space-y-4">
-              <Label htmlFor="age" className="text-base font-medium">
-                Wiek *
-              </Label>
-              <Input
-                id="age"
-                type="number"
-                value={simulationData.age || ""}
-                onChange={(e) =>
-                  handleInputChange("age", parseInt(e.target.value) || 0)
-                }
-                placeholder="Wpisz swój wiek"
-                className="h-12"
-              />
-            </div>
-
-            <div className="space-y-4">
-              <Label className="text-base font-medium">Płeć *</Label>
-              <Select
-                value={simulationData.gender}
-                onValueChange={(value: "male" | "female") =>
-                  handleInputChange("gender", value)
-                }
-              >
-                <SelectTrigger className="h-12">
-                  <SelectValue placeholder="Wybierz płeć" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="male">Mężczyzna</SelectItem>
-                  <SelectItem value="female">Kobieta</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="space-y-4">
-              <Label htmlFor="salary" className="text-base font-medium">
-                Wysokość wynagrodzenia brutto (PLN) *
-              </Label>
-              <div className="relative">
-                <Input
-                  id="salary"
-                  type="text"
-                  value={formatCurrency(simulationData.grossSalary.toString())}
-                  onChange={(e) => handleCurrencyChange("grossSalary", e)}
-                  placeholder="0"
-                  className="h-12 pr-20"
-                />
-                <div className="absolute right-4 top-1/2 -translate-y-1/2 text-sm font-medium text-muted-foreground">
-                  PLN
-                </div>
-              </div>
-            </div>
-          </div>
+          <Step1BasicInfo
+            control={control}
+            errors={errors}
+            formatCurrency={formatCurrency}
+          />
         );
-
       case 2:
         return (
-          <div className="space-y-6">
-            <div className="space-y-4">
-              <Label htmlFor="workStart" className="text-base font-medium">
-                Rok rozpoczęcia pracy *
-              </Label>
-              <Input
-                id="workStart"
-                type="number"
-                value={simulationData.workStartYear || ""}
-                onChange={(e) =>
-                  handleInputChange(
-                    "workStartYear",
-                    parseInt(e.target.value) || 0
-                  )
-                }
-                placeholder="np. 2020"
-                className="h-12"
-              />
-              <p className="text-sm text-muted-foreground">
-                Rok odnosi się do stycznia danego roku
-              </p>
-            </div>
-
-            <div className="space-y-4">
-              <Label htmlFor="workEnd" className="text-base font-medium">
-                Planowany rok zakończenia aktywności zawodowej *
-              </Label>
-              <Input
-                id="workEnd"
-                type="number"
-                value={simulationData.workEndYear || ""}
-                onChange={(e) =>
-                  handleInputChange(
-                    "workEndYear",
-                    parseInt(e.target.value) || 0
-                  )
-                }
-                placeholder="np. 2055"
-                className="h-12"
-              />
-              <p className="text-sm text-muted-foreground">
-                Automatycznie ustawiony na rok osiągnięcia wieku emerytalnego (
-                {RETIREMENT_AGE[simulationData.gender]} lat)
-              </p>
-            </div>
-
-            <Alert>
-              <AlertDescription>
-                <strong>Informacja:</strong> Rok rozpoczęcia i zakończenia pracy
-                zawsze odnosi się do stycznia danego roku.
-              </AlertDescription>
-            </Alert>
-          </div>
+          <Step2WorkPeriod
+            control={control}
+            errors={errors}
+            watchedGender={watchedGender}
+          />
         );
-
       case 3:
         return (
-          <div className="space-y-6">
-            <div className="space-y-4">
-              <Label htmlFor="zusAccount" className="text-base font-medium">
-                Wysokość zgromadzonych środków na koncie w ZUS (PLN)
-              </Label>
-              <div className="relative">
-                <Input
-                  id="zusAccount"
-                  type="text"
-                  value={formatCurrency(
-                    (simulationData.zusAccountFunds || 0).toString()
-                  )}
-                  onChange={(e) => handleCurrencyChange("zusAccountFunds", e)}
-                  placeholder="0"
-                  className="h-12 pr-20"
-                />
-                <div className="absolute right-4 top-1/2 -translate-y-1/2 text-sm font-medium text-muted-foreground">
-                  PLN
-                </div>
-              </div>
-              <p className="text-sm text-muted-foreground">
-                Jeśli nie znasz tej kwoty, zostanie oszacowana na podstawie
-                wynagrodzenia
-              </p>
-            </div>
-
-            <div className="space-y-4">
-              <Label htmlFor="zusSubAccount" className="text-base font-medium">
-                Wysokość zgromadzonych środków na subkoncie w ZUS (PLN)
-              </Label>
-              <div className="relative">
-                <Input
-                  id="zusSubAccount"
-                  type="text"
-                  value={formatCurrency(
-                    (simulationData.zusSubAccountFunds || 0).toString()
-                  )}
-                  onChange={(e) =>
-                    handleCurrencyChange("zusSubAccountFunds", e)
-                  }
-                  placeholder="0"
-                  className="h-12 pr-20"
-                />
-                <div className="absolute right-4 top-1/2 -translate-y-1/2 text-sm font-medium text-muted-foreground">
-                  PLN
-                </div>
-              </div>
-            </div>
-
-            <div className="space-y-4">
-              <div className="flex items-center space-x-2">
-                <Checkbox
-                  id="sickLeave"
-                  checked={simulationData.includeSickLeave}
-                  onCheckedChange={(checked) =>
-                    handleInputChange("includeSickLeave", checked)
-                  }
-                />
-                <Label htmlFor="sickLeave" className="text-base font-medium">
-                  Uwzględniaj możliwość zwolnień lekarskich
-                </Label>
-              </div>
-              <p className="text-sm text-muted-foreground ml-6">
-                Symulacja uwzględni średnią długość zwolnień lekarskich w ciągu
-                życia
-              </p>
-            </div>
-
-            {simulationData.includeSickLeave && (
-              <Alert>
-                <AlertDescription>
-                  <div className="space-y-2">
-                    <p>
-                      <strong>Średnie zwolnienia lekarskie w Polsce:</strong>
-                    </p>
-                    <p>• Mężczyźni: {SICK_LEAVE_DATA.male} dni rocznie</p>
-                    <p>• Kobiety: {SICK_LEAVE_DATA.female} dni rocznie</p>
-                    <p className="text-sm text-muted-foreground mt-2">
-                      Ta informacja zostanie uwzględniona w obliczeniach
-                      emerytury
-                    </p>
-                  </div>
-                </AlertDescription>
-              </Alert>
-            )}
-          </div>
+          <Step3AdditionalInfo
+            control={control}
+            errors={errors}
+            formatCurrency={formatCurrency}
+          />
         );
-
       case 4:
         return (
-          <div className="space-y-6">
-            <div className="space-y-4">
-              <h3 className="text-lg font-semibold">Podsumowanie danych</h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <Card>
-                  <CardHeader className="pb-3">
-                    <CardTitle className="text-sm">Dane podstawowe</CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-2">
-                    <div className="flex justify-between">
-                      <span className="text-sm text-muted-foreground">
-                        Wiek:
-                      </span>
-                      <span className="text-sm font-medium">
-                        {simulationData.age} lat
-                      </span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-sm text-muted-foreground">
-                        Płeć:
-                      </span>
-                      <span className="text-sm font-medium">
-                        {simulationData.gender === "male"
-                          ? "Mężczyzna"
-                          : "Kobieta"}
-                      </span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-sm text-muted-foreground">
-                        Wynagrodzenie:
-                      </span>
-                      <span className="text-sm font-medium">
-                        {new Intl.NumberFormat("pl-PL").format(
-                          simulationData.grossSalary
-                        )}{" "}
-                        PLN
-                      </span>
-                    </div>
-                  </CardContent>
-                </Card>
-
-                <Card>
-                  <CardHeader className="pb-3">
-                    <CardTitle className="text-sm">Okres pracy</CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-2">
-                    <div className="flex justify-between">
-                      <span className="text-sm text-muted-foreground">
-                        Rozpoczęcie:
-                      </span>
-                      <span className="text-sm font-medium">
-                        {simulationData.workStartYear}
-                      </span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-sm text-muted-foreground">
-                        Zakończenie:
-                      </span>
-                      <span className="text-sm font-medium">
-                        {simulationData.workEndYear}
-                      </span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-sm text-muted-foreground">
-                        Lata pracy:
-                      </span>
-                      <span className="text-sm font-medium">
-                        {simulationData.workEndYear -
-                          simulationData.workStartYear}{" "}
-                        lat
-                      </span>
-                    </div>
-                  </CardContent>
-                </Card>
-              </div>
-
-              {(simulationData.zusAccountFunds ||
-                simulationData.zusSubAccountFunds ||
-                simulationData.includeSickLeave) && (
-                <Card>
-                  <CardHeader className="pb-3">
-                    <CardTitle className="text-sm">
-                      Dodatkowe informacje
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-2">
-                    {simulationData.zusAccountFunds && (
-                      <div className="flex justify-between">
-                        <span className="text-sm text-muted-foreground">
-                          Konto ZUS:
-                        </span>
-                        <span className="text-sm font-medium">
-                          {new Intl.NumberFormat("pl-PL").format(
-                            simulationData.zusAccountFunds
-                          )}{" "}
-                          PLN
-                        </span>
-                      </div>
-                    )}
-                    {simulationData.zusSubAccountFunds && (
-                      <div className="flex justify-between">
-                        <span className="text-sm text-muted-foreground">
-                          Subkonto ZUS:
-                        </span>
-                        <span className="text-sm font-medium">
-                          {new Intl.NumberFormat("pl-PL").format(
-                            simulationData.zusSubAccountFunds
-                          )}{" "}
-                          PLN
-                        </span>
-                      </div>
-                    )}
-                    {simulationData.includeSickLeave && (
-                      <div className="flex justify-between">
-                        <span className="text-sm text-muted-foreground">
-                          Zwolnienia lekarskie:
-                        </span>
-                        <Badge variant="secondary">Uwzględnione</Badge>
-                      </div>
-                    )}
-                  </CardContent>
-                </Card>
-              )}
-            </div>
-
-            <Button
-              onClick={calculateProjection}
-              disabled={isCalculating}
-              className="w-full h-14 text-base font-semibold bg-blue-600 hover:bg-blue-700 text-white"
-            >
-              {isCalculating
-                ? "Obliczanie..."
-                : "Zaprognozuj moją przyszłą emeryturę"}
-            </Button>
-          </div>
+          <Step4Review
+            control={control}
+            calculateProjection={calculateProjection}
+            isCalculating={isCalculating}
+          />
         );
-
       default:
         return null;
     }
@@ -616,6 +311,7 @@ export default function SimulationPage() {
               currentStep={currentStep}
               totalSteps={totalSteps}
               className="mb-8"
+              onStepClick={handleStepClick}
             />
 
             <div className="min-h-[400px]">{renderStepContent()}</div>
@@ -649,101 +345,7 @@ export default function SimulationPage() {
           </CardContent>
         </Card>
 
-        {projectionResult && (
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-2xl">Prognoza emerytury</CardTitle>
-              <CardDescription>
-                Wyniki obliczeń na podstawie wprowadzonych danych
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <div className="text-center">
-                  <div className="text-3xl font-bold text-green-600 mb-2">
-                    {new Intl.NumberFormat("pl-PL").format(
-                      projectionResult.monthlyPension
-                    )}{" "}
-                    PLN
-                  </div>
-                  <div className="text-sm text-muted-foreground">
-                    Miesięczna emerytura
-                  </div>
-                </div>
-
-                <div className="text-center">
-                  <div className="text-3xl font-bold text-blue-600 mb-2">
-                    {new Intl.NumberFormat("pl-PL").format(
-                      projectionResult.yearlyPension
-                    )}{" "}
-                    PLN
-                  </div>
-                  <div className="text-sm text-muted-foreground">
-                    Roczna emerytura
-                  </div>
-                </div>
-
-                <div className="text-center">
-                  <div className="text-3xl font-bold text-purple-600 mb-2">
-                    {projectionResult.workYears} lat
-                  </div>
-                  <div className="text-sm text-muted-foreground">
-                    Lata pracy
-                  </div>
-                </div>
-              </div>
-
-              <Separator className="my-6" />
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                  <h4 className="font-semibold mb-3">Szczegóły obliczeń</h4>
-                  <div className="space-y-2">
-                    <div className="flex justify-between">
-                      <span className="text-sm text-muted-foreground">
-                        Średnie wynagrodzenie:
-                      </span>
-                      <span className="text-sm font-medium">
-                        {new Intl.NumberFormat("pl-PL").format(
-                          projectionResult.avgSalary
-                        )}{" "}
-                        PLN
-                      </span>
-                    </div>
-                    {projectionResult.sickLeaveReduction > 0 && (
-                      <>
-                        <div className="flex justify-between">
-                          <span className="text-sm text-muted-foreground">
-                            Redukcja za zwolnienia:
-                          </span>
-                          <span className="text-sm font-medium">
-                            {projectionResult.sickLeaveReduction}%
-                          </span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span className="text-sm text-muted-foreground">
-                            Średnie dni zwolnień rocznie:
-                          </span>
-                          <span className="text-sm font-medium">
-                            {projectionResult.sickLeaveDays} dni
-                          </span>
-                        </div>
-                      </>
-                    )}
-                  </div>
-                </div>
-
-                <Alert>
-                  <AlertDescription>
-                    <strong>Uwaga:</strong> To jest uproszczona prognoza.
-                    Rzeczywista wysokość emerytury może się różnić w zależności
-                    od zmian w przepisach, inflacji i innych czynników.
-                  </AlertDescription>
-                </Alert>
-              </div>
-            </CardContent>
-          </Card>
-        )}
+        <SimulationResults projectionResult={projectionResult} />
       </div>
     </div>
   );
