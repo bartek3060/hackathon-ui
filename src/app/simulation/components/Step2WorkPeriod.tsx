@@ -3,7 +3,6 @@
 import { Controller, Control, FieldErrors } from "react-hook-form";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Alert, AlertDescription } from "@/components/ui/alert";
 import { SimulationFormInterface } from "../simulation-form.schema";
 
 interface Step2WorkPeriodProps {
@@ -46,8 +45,8 @@ export function Step2WorkPeriod({
                   {String(errors.workStartYear.message || "Invalid value")}
                 </p>
               )}
-              <p className="text-sm text-muted-foreground">
-                Rok odnosi się do stycznia danego roku
+              <p className="text-sm text-gray-500 mt-2">
+                Wprowadź rok w formacie RRRR (np. 2020)
               </p>
             </div>
           )}
@@ -76,22 +75,44 @@ export function Step2WorkPeriod({
                   {String(errors.workEndYear.message || "Invalid value")}
                 </p>
               )}
-              <p className="text-sm text-muted-foreground">
-                Automatycznie ustawiony na rok osiągnięcia wieku emerytalnego (
-                {RETIREMENT_AGE[watchedGender as keyof typeof RETIREMENT_AGE]}{" "}
-                lat)
-              </p>
+              {watchedGender && (
+                <p className="text-sm text-gray-500 mt-2">
+                  Sugerowany wiek emerytalny: {RETIREMENT_AGE[watchedGender as keyof typeof RETIREMENT_AGE]} lat
+                </p>
+              )}
             </div>
           )}
         />
       </div>
 
-      <Alert>
-        <AlertDescription>
-          <strong>Informacja:</strong> Rok rozpoczęcia i zakończenia pracy
-          zawsze odnosi się do stycznia danego roku.
-        </AlertDescription>
-      </Alert>
+      <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+        <div className="flex items-start gap-3">
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="20"
+            height="20"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            className="text-blue-600 flex-shrink-0 mt-0.5"
+          >
+            <circle cx="12" cy="12" r="10"></circle>
+            <line x1="12" y1="16" x2="12" y2="12"></line>
+            <line x1="12" y1="8" x2="12.01" y2="8"></line>
+          </svg>
+          <div>
+            <p className="text-sm font-medium text-blue-900 mb-1">
+              Uwaga dotycząca dat
+            </p>
+            <p className="text-sm text-blue-700">
+              W kalkulacjach przyjmujemy, że rozpoczęcie i zakończenie pracy następuje w styczniu danego roku.
+            </p>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }

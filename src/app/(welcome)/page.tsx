@@ -4,10 +4,14 @@ import { useSendEvent } from "@/hooks/mutations/useSendEvent";
 import { RetirementSimulator } from "./components/RetirementSimulator";
 import { useEffect } from "react";
 import { AppEventType } from "@/enums/app-event-types.enum";
-import { getSessionId } from "@/lib/session";
+import { getSessionId, clearSessionId } from "@/lib/session";
 
 export default function Home() {
   const { mutate } = useSendEvent();
+
+  useEffect(() => {
+    clearSessionId();
+  }, []);
 
   useEffect(() => {
     mutate({

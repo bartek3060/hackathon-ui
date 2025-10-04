@@ -4,7 +4,6 @@ import { Controller, Control, FieldErrors, useWatch } from "react-hook-form";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Alert, AlertDescription } from "@/components/ui/alert";
 import { SimulationFormInterface } from "../simulation-form.schema";
 
 interface Step3AdditionalInfoProps {
@@ -64,9 +63,8 @@ export function Step3AdditionalInfo({
                   {String(errors.zusAccountFunds.message || "Invalid value")}
                 </p>
               )}
-              <p className="text-sm text-muted-foreground">
-                Jeśli nie znasz tej kwoty, zostanie oszacowana na podstawie
-                wynagrodzenia
+              <p className="text-sm text-gray-500 mt-2">
+                Pole opcjonalne – zostanie oszacowane automatycznie
               </p>
             </div>
           )}
@@ -124,9 +122,8 @@ export function Step3AdditionalInfo({
                   Uwzględniaj możliwość zwolnień lekarskich
                 </Label>
               </div>
-              <p className="text-sm text-muted-foreground ml-6">
-                Symulacja uwzględni średnią długość zwolnień lekarskich w ciągu
-                życia
+              <p className="text-sm text-gray-500 ml-6 mt-1">
+                Symulacja uwzględni średnią długość zwolnień w okresie aktywności zawodowej
               </p>
             </div>
           )}
@@ -134,20 +131,50 @@ export function Step3AdditionalInfo({
       </div>
 
       {watchedGender && includeSickLeave && (
-        <Alert>
-          <AlertDescription>
-            <div className="space-y-2">
-              <p>
-                <strong>Średnie zwolnienia lekarskie w Polsce:</strong>
+        <div className="bg-purple-50 border border-purple-200 rounded-lg p-4">
+          <div className="flex items-start gap-3">
+            <div className="w-10 h-10 rounded-lg bg-purple-100 flex items-center justify-center flex-shrink-0">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="20"
+                height="20"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                className="text-purple-600"
+              >
+                <path d="M22 12h-4l-3 9L9 3l-3 9H2"></path>
+              </svg>
+            </div>
+            <div className="flex-1">
+              <p className="text-sm font-semibold text-purple-900 mb-2">
+                Średnie zwolnienia lekarskie w Polsce
               </p>
-              <p>• Mężczyźni: {SICK_LEAVE_DATA.male} dni rocznie</p>
-              <p>• Kobiety: {SICK_LEAVE_DATA.female} dni rocznie</p>
-              <p className="text-sm text-muted-foreground mt-2">
-                Ta informacja zostanie uwzględniona w obliczeniach emerytury
+              <div className="grid grid-cols-2 gap-3 mb-3">
+                <div className="bg-white/60 rounded-lg p-3 border border-purple-200/50">
+                  <p className="text-xs text-purple-700 mb-1">Mężczyźni</p>
+                  <p className="text-lg font-bold text-purple-900">
+                    {SICK_LEAVE_DATA.male} dni
+                  </p>
+                  <p className="text-xs text-purple-600">rocznie</p>
+                </div>
+                <div className="bg-white/60 rounded-lg p-3 border border-purple-200/50">
+                  <p className="text-xs text-purple-700 mb-1">Kobiety</p>
+                  <p className="text-lg font-bold text-purple-900">
+                    {SICK_LEAVE_DATA.female} dni
+                  </p>
+                  <p className="text-xs text-purple-600">rocznie</p>
+                </div>
+              </div>
+              <p className="text-xs text-purple-700">
+                ✓ Dane zostaną uwzględnione w kalkulacji wysokości emerytury
               </p>
             </div>
-          </AlertDescription>
-        </Alert>
+          </div>
+        </div>
       )}
     </div>
   );

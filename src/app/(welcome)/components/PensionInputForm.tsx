@@ -57,7 +57,7 @@ export function PensionInputForm({ onSubmit, isLoading }: PensionInputFormProps)
             disabled={!desiredAmount || isLoading}
             className="h-14 px-8 text-base font-semibold"
           >
-            {isLoading ? "Ładowanie..." : "Pokaż symulację"}
+            {isLoading ? "Ładowanie..." : "Wyślij"}
           </GreenButton>
         </div>
         <p className="text-sm text-gray-500">

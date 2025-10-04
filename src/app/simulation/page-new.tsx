@@ -55,6 +55,7 @@ const SICK_LEAVE_DATA = {
 export default function SimulationPage() {
   const { mutate, isPending } = useCalculatePension();
   const [currentStep, setCurrentStep] = useState(1);
+  const [isCalculating, setIsCalculating] = useState(false);
 
   const totalSteps = 4;
 
@@ -222,7 +223,13 @@ export default function SimulationPage() {
           />
         );
       case 4:
-        return <Step4Review control={control} />;
+        return (
+          <Step4Review
+            control={control}
+            calculateProjection={calculateProjection}
+            isCalculating={isCalculating}
+          />
+        );
       default:
         return null;
     }
@@ -242,18 +249,19 @@ export default function SimulationPage() {
         </a>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 min-h-screen">
-        {/* Left Column - Form (60%) */}
-        <div className="bg-white flex items-center justify-center p-12">
-          <div className="max-w-2xl w-full space-y-8">
+      <div className="max-w-7xl mx-auto px-8 py-20">
+        {/* Main Grid Layout */}
+        <div className="grid grid-cols-1 lg:grid-cols-5 gap-12">
+          {/* Left Column - Form (60%) */}
+          <div className="lg:col-span-3">
             <StepHeader
               title="Uzupełnij dane do symulacji"
               subtitle="Po zapisaniu danych pokażemy prognozy w czasie rzeczywistym."
             />
 
             {/* Progress Indicator */}
-            <div className="space-y-3">
-              <div className="flex items-center justify-between">
+            <div className="mb-8">
+              <div className="flex items-center justify-between mb-3">
                 <span className="text-sm font-medium text-gray-700">
                   Krok {currentStep} z {totalSteps}
                 </span>
@@ -270,15 +278,15 @@ export default function SimulationPage() {
             </div>
 
             {/* Step Title */}
-            <div className="space-y-2">
-              <h2 className="text-xl font-bold text-gray-900">
+            <div className="mb-6">
+              <h2 className="text-2xl font-bold text-gray-900 mb-2">
                 {getStepTitle()}
               </h2>
               <p className="text-sm text-gray-600">{getStepDescription()}</p>
             </div>
 
             {/* Step Content */}
-            <div className="space-y-6">
+            <div className="bg-white border border-gray-200 rounded-lg p-6 mb-6">
               {renderStepContent()}
             </div>
 
@@ -295,11 +303,9 @@ export default function SimulationPage() {
               isLoading={isPending}
             />
           </div>
-        </div>
 
-        {/* Right Column - Placeholder */}
-        <div className="relative h-screen overflow-hidden">
-          <div className="absolute inset-0 p-8 flex items-center justify-center">
+          {/* Right Column - Placeholder (40%) */}
+          <div className="lg:col-span-2">
             <RealtimePlaceholderPanel />
           </div>
         </div>

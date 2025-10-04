@@ -3,3 +3,7 @@ export { Step2WorkPeriod } from "./Step2WorkPeriod";
 export { Step3AdditionalInfo } from "./Step3AdditionalInfo";
 export { Step4Review } from "./Step4Review";
 export { SimulationResults } from "./SimulationResults";
+export { StepHeader } from "./StepHeader";
+export { FormSection } from "./FormSection";
+export { FormActions } from "./FormActions";
+export { RealtimePlaceholderPanel } from "./RealtimePlaceholderPanel";

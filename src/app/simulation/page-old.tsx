@@ -3,21 +3,32 @@
 import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Stepper } from "@/components/ui/stepper";
+import { Separator } from "@/components/ui/separator";
+
 import { useSendEvent } from "@/hooks/mutations/useSendEvent";
 import { AppEventType } from "@/enums/app-event-types.enum";
 import { getSessionId } from "@/lib/session";
 import {
   simulationFormSchema,
+  SimulationFormData,
   SimulationFormInterface,
 } from "@/app/simulation/simulation-form.schema";
+import { z } from "zod";
 import {
   Step1BasicInfo,
   Step2WorkPeriod,
   Step3AdditionalInfo,
   Step4Review,
-  StepHeader,
-  FormActions,
-  RealtimePlaceholderPanel,
+  SimulationResults,
 } from "./components";
 import { useCalculatePension } from "@/hooks/mutations/useCalculatePension";
 
@@ -52,9 +63,21 @@ const SICK_LEAVE_DATA = {
   female: 18, // days per year
 };
 
+interface SimulationProjectionResult {
+  monthlyPension: number;
+  yearlyPension: number;
+  workYears: number;
+  avgSalary: number;
+  sickLeaveReduction: number;
+  sickLeaveDays: number;
+}
+
 export default function SimulationPage() {
   const { mutate, isPending } = useCalculatePension();
   const [currentStep, setCurrentStep] = useState(1);
+  const [projectionResult, setProjectionResult] =
+    useState<SimulationProjectionResult | null>(null);
+  const [isCalculating, setIsCalculating] = useState(false);
 
   const totalSteps = 4;
 
@@ -83,7 +106,7 @@ export default function SimulationPage() {
   const watchedAge = watch("age");
   const watchedGender = watch("gender");
 
-  // Auto-calculate retirement year based on age and gender
+  // Auto-calculate retirement year based on sessionId and gender
   useEffect(() => {
     if (watchedAge > 0 && watchedGender) {
       const retirementAge =
@@ -106,7 +129,7 @@ export default function SimulationPage() {
     const formValues = watch();
 
     switch (step) {
-      case 1:
+      case 0:
         return (
           formValues.age > 0 &&
           formValues.gender !== undefined &&
@@ -115,16 +138,16 @@ export default function SimulationPage() {
           !errors.gender &&
           !errors.grossSalary
         );
-      case 2:
+      case 1:
         return (
           formValues.workStartYear > 0 &&
           formValues.workEndYear > 0 &&
           !errors.workStartYear &&
           !errors.workEndYear
         );
-      case 3:
+      case 2:
         return true; // Optional fields
-      case 4:
+      case 3:
         return true; // Review step
       default:
         return false;
@@ -138,12 +161,36 @@ export default function SimulationPage() {
   };
 
   const prevStep = () => {
-    if (currentStep > 1) {
+    if (currentStep > 0) {
       setCurrentStep((prev) => prev - 1);
     }
   };
 
+  const handleStepClick = (stepIndex: number) => {
+    // Allow navigation to any step that is valid or already completed
+    // Step 0 is always accessible (basic info)
+    // Allow going back to any previous step
+    // Allow going forward only if current step is valid
+    if (
+      stepIndex === 0 ||
+      stepIndex < currentStep ||
+      (stepIndex === currentStep + 1 && isStepValid(currentStep))
+    ) {
+      setCurrentStep(stepIndex);
+    }
+  };
+
   const calculateProjection = async (data: SimulationFormInterface) => {
+    const workYears = data.workEndYear - data.workStartYear;
+    const avgSalary = calculateAverageSalary(data);
+    const sickLeaveReduction = data.includeSickLeave
+      ? calculateSickLeaveReduction(data)
+      : 0;
+
+    // Simplified pension calculation (this would be more complex in reality)
+    const basePension = (avgSalary * 0.24 * workYears) / 12; // 24% contribution rate
+    const finalPension = basePension * (1 - sickLeaveReduction);
+
     // Convert to DTO format for API call
     const currentYear = new Date().getFullYear();
     const birthDate = new Date(currentYear - data.age, 0, 1);
@@ -165,34 +212,34 @@ export default function SimulationPage() {
     mutate(dtoPayload);
   };
 
-  const getStepTitle = () => {
-    switch (currentStep) {
-      case 1:
-        return "Podstawowe dane osobowe";
-      case 2:
-        return "Okres aktywności zawodowej";
-      case 3:
-        return "Dodatkowe informacje";
-      case 4:
-        return "Podsumowanie i obliczenia";
-      default:
-        return "";
+  const calculateAverageSalary = (data: SimulationFormInterface): number => {
+    let currentSalary = data.grossSalary;
+    let totalSalary = 0;
+
+    for (let year = data.workStartYear; year < data.workEndYear; year++) {
+      totalSalary += currentSalary;
+      // Apply salary growth for next year
+      const growthData = SALARY_GROWTH_DATA.find((d) => d.year === year);
+      if (growthData) {
+        currentSalary *= growthData.indexation;
+      } else {
+        currentSalary *= 1.05; // Default 5% growth
+      }
     }
+
+    return totalSalary / (data.workEndYear - data.workStartYear);
   };
 
-  const getStepDescription = () => {
-    switch (currentStep) {
-      case 1:
-        return "Wprowadź swoje dane demograficzne i obecne wynagrodzenie";
-      case 2:
-        return "Określ planowany okres aktywności zawodowej";
-      case 3:
-        return "Opcjonalnie uzupełnij informacje o zgromadzonym kapitale";
-      case 4:
-        return "Sprawdź wprowadzone dane i uruchom kalkulację";
-      default:
-        return "";
-    }
+  const calculateSickLeaveReduction = (
+    data: SimulationFormInterface
+  ): number => {
+    const sickDaysPerYear =
+      data.gender === "male" ? SICK_LEAVE_DATA.male : SICK_LEAVE_DATA.female;
+    const workYears = data.workEndYear - data.workStartYear;
+    const totalSickDays = sickDaysPerYear * workYears;
+    const totalWorkingDays = workYears * 250; // Approximate working days per year
+
+    return totalSickDays / totalWorkingDays;
   };
 
   const renderStepContent = () => {
@@ -222,89 +269,84 @@ export default function SimulationPage() {
           />
         );
       case 4:
-        return <Step4Review control={control} />;
+        return (
+          <Step4Review
+            control={control}
+            calculateProjection={calculateProjection}
+            isCalculating={isCalculating}
+          />
+        );
       default:
         return null;
     }
   };
 
   return (
-    <div className="min-h-screen bg-white">
-      {/* Header with logo */}
-      <div className="absolute top-8 left-8 z-10">
-        <a
-          href="https://www.zus.pl/"
-          target="_blank"
-          rel="noopener noreferrer"
-          className="block hover:opacity-80 transition-opacity"
-        >
-          <img src="/logo.svg" alt="ZUS Logo" className="h-12 w-auto" />
-        </a>
-      </div>
-
-      <div className="grid grid-cols-1 lg:grid-cols-2 min-h-screen">
-        {/* Left Column - Form (60%) */}
-        <div className="bg-white flex items-center justify-center p-12">
-          <div className="max-w-2xl w-full space-y-8">
-            <StepHeader
-              title="Uzupełnij dane do symulacji"
-              subtitle="Po zapisaniu danych pokażemy prognozy w czasie rzeczywistym."
-            />
-
-            {/* Progress Indicator */}
-            <div className="space-y-3">
-              <div className="flex items-center justify-between">
-                <span className="text-sm font-medium text-gray-700">
-                  Krok {currentStep} z {totalSteps}
-                </span>
-                <span className="text-sm text-gray-500">
-                  {Math.round((currentStep / totalSteps) * 100)}%
-                </span>
-              </div>
-              <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
-                <div
-                  className="h-full bg-custom-2 transition-all duration-300 ease-out"
-                  style={{ width: `${(currentStep / totalSteps) * 100}%` }}
-                />
-              </div>
-            </div>
-
-            {/* Step Title */}
-            <div className="space-y-2">
-              <h2 className="text-xl font-bold text-gray-900">
-                {getStepTitle()}
-              </h2>
-              <p className="text-sm text-gray-600">{getStepDescription()}</p>
-            </div>
-
-            {/* Step Content */}
-            <div className="space-y-6">
-              {renderStepContent()}
-            </div>
-
-            {/* Form Actions */}
-            <FormActions
-              onBack={prevStep}
-              onNext={currentStep < totalSteps ? nextStep : undefined}
-              onSubmit={currentStep === totalSteps ? () => calculateProjection(getValues()) : undefined}
-              isBackDisabled={currentStep === 1}
-              isNextDisabled={!isStepValid(currentStep)}
-              showBack={true}
-              showNext={currentStep < totalSteps}
-              showSubmit={currentStep === totalSteps}
-              isLoading={isPending}
-            />
-          </div>
+    <div className="min-h-screen bg-gradient-to-b from-background to-background/95">
+      <div className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8 py-12">
+        <div className="mb-8">
+          <h1 className="text-4xl font-bold text-foreground mb-3">
+            Symulator przyszłej emerytury
+          </h1>
+          <p className="text-lg text-muted-foreground">
+            Wypełnij formularz krok po kroku, aby poznać prognozę swojej
+            emerytury
+          </p>
         </div>
 
-        {/* Right Column - Placeholder */}
-        <div className="relative h-screen overflow-hidden">
-          <div className="absolute inset-0 p-8 flex items-center justify-center">
-            <RealtimePlaceholderPanel />
-          </div>
-        </div>
+        <Card className="mb-6">
+          <CardHeader>
+            <CardTitle>
+              Krok {currentStep} z {totalSteps}
+            </CardTitle>
+            <CardDescription>
+              {currentStep === 1 && "Podstawowe dane osobowe"}
+              {currentStep === 2 && "Okres aktywności zawodowej"}
+              {currentStep === 3 && "Dodatkowe informacje"}
+              {currentStep === 4 && "Podsumowanie i prognoza"}
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Stepper
+              currentStep={currentStep}
+              totalSteps={totalSteps}
+              className="mb-8"
+              onStepClick={handleStepClick}
+            />
+
+            <div className="min-h-[400px]">{renderStepContent()}</div>
+
+            <Separator className="my-6" />
+
+            <div className="flex justify-between">
+              <Button
+                variant="outline"
+                onClick={prevStep}
+                disabled={currentStep === 1}
+                className="px-6"
+              >
+                Wstecz
+              </Button>
+
+              {currentStep < totalSteps ? (
+                <Button
+                  onClick={nextStep}
+                  disabled={!isStepValid(currentStep)}
+                  className="px-6 bg-blue-600 hover:bg-blue-700"
+                >
+                  Dalej
+                </Button>
+              ) : (
+                <div className="text-sm text-muted-foreground">
+                  Wszystkie kroki ukończone
+                </div>
+              )}
+            </div>
+          </CardContent>
+        </Card>
+
+        <SimulationResults projectionResult={projectionResult} />
       </div>
     </div>
   );
 }
-
