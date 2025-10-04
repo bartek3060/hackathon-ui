@@ -299,9 +299,7 @@ export default function SimulationPage() {
             </div>
 
             {/* Step Content */}
-            <div className="space-y-6">
-              {renderStepContent()}
-            </div>
+            <div className="space-y-6">{renderStepContent()}</div>
 
             {/* Form Actions */}
             <FormActions
@@ -320,14 +318,18 @@ export default function SimulationPage() {
                     }
                   : undefined
               }
-              onSkip={currentStep === totalSteps ? handleSkipPostalCode : undefined}
+              onSkip={
+                currentStep === totalSteps ? handleSkipPostalCode : undefined
+              }
               isBackDisabled={currentStep === 1}
               isNextDisabled={!isStepValid(currentStep)}
               showBack={true}
               showNext={currentStep < totalSteps}
               showSubmit={currentStep === totalSteps}
               showSkip={currentStep === totalSteps}
-              submitLabel={currentStep === totalSteps ? "Zapisz i zakończ" : undefined}
+              submitLabel={
+                currentStep === totalSteps ? "Zapisz i zakończ" : undefined
+              }
               isLoading={isPending}
             />
           </div>
@@ -343,4 +345,3 @@ export default function SimulationPage() {
     </div>
   );
 }
-
