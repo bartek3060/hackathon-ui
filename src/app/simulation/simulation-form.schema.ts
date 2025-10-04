@@ -52,6 +52,7 @@ export const simulationFormSchema = z
       .default(0),
 
     // Options
+    includeZusFields: z.boolean().optional().default(false),
     includeSickLeave: z.boolean().optional().default(false),
   })
   .refine((data) => data.workEndYear > data.workStartYear, {
@@ -71,6 +72,7 @@ export type SimulationFormDataWithDefaults = {
   workEndYear: number;
   zusAccountFunds: number;
   zusSubAccountFunds: number;
+  includeZusFields: boolean;
   includeSickLeave: boolean;
 };
 

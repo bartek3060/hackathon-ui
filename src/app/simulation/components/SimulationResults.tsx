@@ -109,14 +109,6 @@ export function SimulationResults({
               )}
             </div>
           </div>
-
-          <Alert>
-            <AlertDescription>
-              <strong>Uwaga:</strong> To jest uproszczona prognoza. Rzeczywista
-              wysokość emerytury może się różnić w zależności od zmian w
-              przepisach, inflacji i innych czynników.
-            </AlertDescription>
-          </Alert>
         </div>
       </CardContent>
     </Card>
