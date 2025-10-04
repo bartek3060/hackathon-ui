@@ -3,6 +3,8 @@
 import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { useRouter } from "next/navigation";
+import { toast } from "sonner";
 import { useSendEvent } from "@/hooks/mutations/useSendEvent";
 import { AppEventType } from "@/enums/app-event-types.enum";
 import { getSessionId } from "@/lib/session";
@@ -15,6 +17,7 @@ import {
   Step2WorkPeriod,
   Step3AdditionalInfo,
   Step4Review,
+  Step5PostalCode,
   StepHeader,
   FormActions,
   RealtimePlaceholderPanel,
@@ -54,9 +57,11 @@ const SICK_LEAVE_DATA = {
 
 export default function SimulationPage() {
   const { mutate, isPending } = useCalculatePension();
+  const router = useRouter();
   const [currentStep, setCurrentStep] = useState(1);
+  const [isCalculating, setIsCalculating] = useState(false);
 
-  const totalSteps = 4;
+  const totalSteps = 5;
 
   const form = useForm<SimulationFormInterface>({
     resolver: zodResolver(simulationFormSchema),
@@ -65,6 +70,7 @@ export default function SimulationPage() {
       grossSalary: 5000,
       workStartYear: new Date().getFullYear(),
       workEndYear: new Date().getFullYear() + 40,
+      postalCode: "",
     },
     mode: "onChange",
     shouldUnregister: false, // Keep form values when navigating
@@ -126,6 +132,8 @@ export default function SimulationPage() {
         return true; // Optional fields
       case 4:
         return true; // Review step
+      case 5:
+        return true; // Optional postal code step
       default:
         return false;
     }
@@ -157,12 +165,19 @@ export default function SimulationPage() {
       grossSalary: data.grossSalary,
       workStartYear: workStartDate,
       plannedWorkEndYear: workEndDate,
-      amountOfMoneyInZusAccount: data.zusAccountFunds || 0,
-      amountOfMoneyInZusSubAccount: data.zusSubAccountFunds || 0,
+      ...(data.includeZusFields && {
+        amountOfMoneyInZusAccount: data.zusAccountFunds || 0,
+        amountOfMoneyInZusSubAccount: data.zusSubAccountFunds || 0,
+      }),
       includeSickLeave: data.includeSickLeave || false,
     };
 
     mutate(dtoPayload);
+  };
+
+  const handleSkipPostalCode = () => {
+    toast.info("Przechodzimy dalej do wyników symulacji.");
+    calculateProjection(getValues());
   };
 
   const getStepTitle = () => {
@@ -174,7 +189,9 @@ export default function SimulationPage() {
       case 3:
         return "Dodatkowe informacje";
       case 4:
-        return "Podsumowanie i obliczenia";
+        return "Podsumowanie danych";
+      case 5:
+        return "Dane regionalne (opcjonalnie)";
       default:
         return "";
     }
@@ -189,7 +206,9 @@ export default function SimulationPage() {
       case 3:
         return "Opcjonalnie uzupełnij informacje o zgromadzonym kapitale";
       case 4:
-        return "Sprawdź wprowadzone dane i uruchom kalkulację";
+        return "Sprawdź wprowadzone dane przed zapisaniem";
+      case 5:
+        return "Pomóż nam lepiej analizować sytuację emerytalną w Polsce";
       default:
         return "";
     }
@@ -223,6 +242,8 @@ export default function SimulationPage() {
         );
       case 4:
         return <Step4Review control={control} />;
+      case 5:
+        return <Step5PostalCode control={control} errors={errors} />;
       default:
         return null;
     }
@@ -286,12 +307,27 @@ export default function SimulationPage() {
             <FormActions
               onBack={prevStep}
               onNext={currentStep < totalSteps ? nextStep : undefined}
-              onSubmit={currentStep === totalSteps ? () => calculateProjection(getValues()) : undefined}
+              onSubmit={
+                currentStep === totalSteps
+                  ? () => {
+                      const values = getValues();
+                      if (values.postalCode) {
+                        toast.success(
+                          "Dziękujemy! Twoje dane pomogą nam lepiej analizować sytuację emerytalną w Polsce."
+                        );
+                      }
+                      calculateProjection(values);
+                    }
+                  : undefined
+              }
+              onSkip={currentStep === totalSteps ? handleSkipPostalCode : undefined}
               isBackDisabled={currentStep === 1}
               isNextDisabled={!isStepValid(currentStep)}
               showBack={true}
               showNext={currentStep < totalSteps}
               showSubmit={currentStep === totalSteps}
+              showSkip={currentStep === totalSteps}
+              submitLabel={currentStep === totalSteps ? "Zapisz i zakończ" : undefined}
               isLoading={isPending}
             />
           </div>

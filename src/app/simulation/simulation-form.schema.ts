@@ -52,7 +52,15 @@ export const simulationFormSchema = z
       .default(0),
 
     // Options
+    includeZusFields: z.boolean().optional().default(false),
     includeSickLeave: z.boolean().optional().default(false),
+
+    // Optional postal code (Step 5)
+    postalCode: z
+      .string()
+      .regex(/^\d{2}-\d{3}$/, "Podaj kod w formacie XX-XXX")
+      .optional()
+      .or(z.literal("")),
   })
   .refine((data) => data.workEndYear > data.workStartYear, {
     message: "Rok zakończenia pracy musi być późniejszy niż rok rozpoczęcia",
@@ -71,6 +79,7 @@ export type SimulationFormDataWithDefaults = {
   workEndYear: number;
   zusAccountFunds: number;
   zusSubAccountFunds: number;
+  includeZusFields: boolean;
   includeSickLeave: boolean;
 };
 

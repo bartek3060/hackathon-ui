@@ -2,6 +2,7 @@ export { Step1BasicInfo } from "./Step1BasicInfo";
 export { Step2WorkPeriod } from "./Step2WorkPeriod";
 export { Step3AdditionalInfo } from "./Step3AdditionalInfo";
 export { Step4Review } from "./Step4Review";
+export { Step5PostalCode } from "./Step5PostalCode";
 export { SimulationResults } from "./SimulationResults";
 export { StepHeader } from "./StepHeader";
 export { FormSection } from "./FormSection";

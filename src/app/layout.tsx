@@ -2,6 +2,7 @@
 
 import "./globals.css";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { Toaster } from "sonner";
 import { PageTransitionWrapper } from "@/components/PageTransitionWrapper";
 
 export default function RootLayout({
@@ -18,6 +19,7 @@ export default function RootLayout({
           <PageTransitionWrapper>
             {children}
           </PageTransitionWrapper>
+          <Toaster position="top-right" richColors />
         </body>
       </QueryClientProvider>
     </html>

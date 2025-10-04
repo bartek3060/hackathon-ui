@@ -26,6 +26,10 @@ export function Step3AdditionalInfo({
     | "male"
     | "female"
     | undefined;
+  const includeZusFields = useWatch({
+    control,
+    name: "includeZusFields",
+  }) as boolean;
   const includeSickLeave = useWatch({
     control,
     name: "includeSickLeave",
@@ -34,29 +38,20 @@ export function Step3AdditionalInfo({
   return (
     <div className="space-y-6">
       <div className="space-y-4">
-        <Label htmlFor="zusAccount" className="text-base font-medium">
-          Wysokość zgromadzonych środków na koncie w ZUS (PLN)
-        </Label>
         <Controller
-          name="zusAccountFunds"
+          name="includeZusFields"
           control={control}
           render={({ field }) => (
             <div>
-              <div className="relative">
-                <Input
-                  id="zusAccount"
-                  type="text"
-                  value={formatCurrency((field.value || 0).toString())}
-                  onChange={(e) => {
-                    const value = e.target.value.replace(/\D/g, "");
-                    field.onChange(value ? parseInt(value) : 0);
-                  }}
-                  placeholder="0"
-                  className="h-12 pr-20"
+              <div className="flex items-center space-x-2">
+                <Checkbox
+                  id="zusFields"
+                  checked={field.value}
+                  onCheckedChange={field.onChange}
                 />
-                <div className="absolute right-4 top-1/2 -translate-y-1/2 text-sm font-medium text-muted-foreground">
-                  PLN
-                </div>
+                <Label htmlFor="zusFields" className="text-base font-medium">
+                  Chcesz podać wysokość zgromadzonych środków ZUS
+                </Label>
               </div>
               {errors.zusAccountFunds && (
                 <p className="text-sm text-red-500 mt-1">
@@ -71,40 +66,87 @@ export function Step3AdditionalInfo({
         />
       </div>
 
-      <div className="space-y-4">
-        <Label htmlFor="zusSubAccount" className="text-base font-medium">
-          Wysokość zgromadzonych środków na subkoncie w ZUS (PLN)
-        </Label>
-        <Controller
-          name="zusSubAccountFunds"
-          control={control}
-          render={({ field }) => (
-            <div>
-              <div className="relative">
-                <Input
-                  id="zusSubAccount"
-                  type="text"
-                  value={formatCurrency((field.value || 0).toString())}
-                  onChange={(e) => {
-                    const value = e.target.value.replace(/\D/g, "");
-                    field.onChange(value ? parseInt(value) : 0);
-                  }}
-                  placeholder="0"
-                  className="h-12 pr-20"
-                />
-                <div className="absolute right-4 top-1/2 -translate-y-1/2 text-sm font-medium text-muted-foreground">
-                  PLN
+      {includeZusFields && (
+        <>
+          <div className="space-y-4">
+            <Label htmlFor="zusAccount" className="text-base font-medium">
+              Wysokość zgromadzonych środków na koncie w ZUS (PLN)
+            </Label>
+            <Controller
+              name="zusAccountFunds"
+              control={control}
+              render={({ field }) => (
+                <div>
+                  <div className="relative">
+                    <Input
+                      id="zusAccount"
+                      type="text"
+                      value={formatCurrency((field.value || 0).toString())}
+                      onChange={(e) => {
+                        const value = e.target.value.replace(/\D/g, "");
+                        field.onChange(value ? parseInt(value) : 0);
+                      }}
+                      placeholder="0"
+                      className="h-12 pr-20"
+                    />
+                    <div className="absolute right-4 top-1/2 -translate-y-1/2 text-sm font-medium text-muted-foreground">
+                      PLN
+                    </div>
+                  </div>
+                  {errors.zusAccountFunds && (
+                    <p className="text-sm text-red-500 mt-1">
+                      {String(
+                        errors.zusAccountFunds.message || "Invalid value"
+                      )}
+                    </p>
+                  )}
+                  <p className="text-sm text-muted-foreground">
+                    Jeśli nie znasz tej kwoty, zostanie oszacowana na podstawie
+                    wynagrodzenia
+                  </p>
                 </div>
-              </div>
-              {errors.zusSubAccountFunds && (
-                <p className="text-sm text-red-500 mt-1">
-                  {String(errors.zusSubAccountFunds.message || "Invalid value")}
-                </p>
               )}
-            </div>
-          )}
-        />
-      </div>
+            />
+          </div>
+
+          <div className="space-y-4">
+            <Label htmlFor="zusSubAccount" className="text-base font-medium">
+              Wysokość zgromadzonych środków na subkoncie w ZUS (PLN)
+            </Label>
+            <Controller
+              name="zusSubAccountFunds"
+              control={control}
+              render={({ field }) => (
+                <div>
+                  <div className="relative">
+                    <Input
+                      id="zusSubAccount"
+                      type="text"
+                      value={formatCurrency((field.value || 0).toString())}
+                      onChange={(e) => {
+                        const value = e.target.value.replace(/\D/g, "");
+                        field.onChange(value ? parseInt(value) : 0);
+                      }}
+                      placeholder="0"
+                      className="h-12 pr-20"
+                    />
+                    <div className="absolute right-4 top-1/2 -translate-y-1/2 text-sm font-medium text-muted-foreground">
+                      PLN
+                    </div>
+                  </div>
+                  {errors.zusSubAccountFunds && (
+                    <p className="text-sm text-red-500 mt-1">
+                      {String(
+                        errors.zusSubAccountFunds.message || "Invalid value"
+                      )}
+                    </p>
+                  )}
+                </div>
+              )}
+            />
+          </div>
+        </>
+      )}
 
       <div className="space-y-4">
         <Controller

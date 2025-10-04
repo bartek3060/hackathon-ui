@@ -5,15 +5,18 @@ interface FormActionsProps {
   onBack?: () => void;
   onNext?: () => void;
   onSubmit?: () => void;
+  onSkip?: () => void;
   isBackDisabled?: boolean;
   isNextDisabled?: boolean;
   isSubmitDisabled?: boolean;
   showBack?: boolean;
   showNext?: boolean;
   showSubmit?: boolean;
+  showSkip?: boolean;
   nextLabel?: string;
   submitLabel?: string;
   backLabel?: string;
+  skipLabel?: string;
   isLoading?: boolean;
 }
 
@@ -21,15 +24,18 @@ export function FormActions({
   onBack,
   onNext,
   onSubmit,
+  onSkip,
   isBackDisabled = false,
   isNextDisabled = false,
   isSubmitDisabled = false,
   showBack = true,
   showNext = true,
   showSubmit = false,
+  showSkip = false,
   nextLabel = "Dalej",
   submitLabel = "Zapisz i kontynuuj",
   backLabel = "Wróć",
+  skipLabel = "Pomiń ten krok",
   isLoading = false,
 }: FormActionsProps) {
   return (
@@ -48,54 +54,68 @@ export function FormActions({
         <div />
       )}
 
-      {showNext && onNext && (
-        <GreenButton
-          type="button"
-          onClick={onNext}
-          disabled={isNextDisabled || isLoading}
-          className="px-8 h-11"
-        >
-          {nextLabel}
-        </GreenButton>
-      )}
+      <div className="flex items-center gap-3">
+        {showSkip && onSkip && (
+          <Button
+            type="button"
+            variant="outline"
+            onClick={onSkip}
+            disabled={isLoading}
+            className="px-6 h-11"
+          >
+            {skipLabel}
+          </Button>
+        )}
 
-      {showSubmit && onSubmit && (
-        <GreenButton
-          type="button"
-          onClick={onSubmit}
-          disabled={isSubmitDisabled || isLoading}
-          className="px-8 h-11"
-        >
-          {isLoading ? (
-            <span className="flex items-center gap-2">
-              <svg
-                className="animate-spin h-5 w-5"
-                xmlns="http://www.w3.org/2000/svg"
-                fill="none"
-                viewBox="0 0 24 24"
-                aria-hidden="true"
-              >
-                <circle
-                  className="opacity-25"
-                  cx="12"
-                  cy="12"
-                  r="10"
-                  stroke="currentColor"
-                  strokeWidth="4"
-                ></circle>
-                <path
-                  className="opacity-75"
-                  fill="currentColor"
-                  d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                ></path>
-              </svg>
-              Przetwarzanie...
-            </span>
-          ) : (
-            submitLabel
-          )}
-        </GreenButton>
-      )}
+        {showNext && onNext && (
+          <GreenButton
+            type="button"
+            onClick={onNext}
+            disabled={isNextDisabled || isLoading}
+            className="px-8 h-11"
+          >
+            {nextLabel}
+          </GreenButton>
+        )}
+
+        {showSubmit && onSubmit && (
+          <GreenButton
+            type="button"
+            onClick={onSubmit}
+            disabled={isSubmitDisabled || isLoading}
+            className="px-8 h-11"
+          >
+            {isLoading ? (
+              <span className="flex items-center gap-2">
+                <svg
+                  className="animate-spin h-5 w-5"
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  aria-hidden="true"
+                >
+                  <circle
+                    className="opacity-25"
+                    cx="12"
+                    cy="12"
+                    r="10"
+                    stroke="currentColor"
+                    strokeWidth="4"
+                  ></circle>
+                  <path
+                    className="opacity-75"
+                    fill="currentColor"
+                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                  ></path>
+                </svg>
+                Przetwarzanie...
+              </span>
+            ) : (
+              submitLabel
+            )}
+          </GreenButton>
+        )}
+      </div>
     </div>
   );
 }
