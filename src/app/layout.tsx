@@ -12,7 +12,7 @@ export default function RootLayout({
   const queryClient = new QueryClient();
 
   return (
-    <html lang="pl" className="dark">
+    <html lang="pl">
       <QueryClientProvider client={queryClient}>
         <body>
           {children}
