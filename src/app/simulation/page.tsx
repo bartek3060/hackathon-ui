@@ -1,7 +1,7 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { useForm } from "react-hook-form";
+import { useState, useEffect, useRef } from "react";
+import { useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
@@ -21,8 +21,10 @@ import {
   StepHeader,
   FormActions,
   RealtimePlaceholderPanel,
+  RealtimeResultsPanel,
 } from "./components";
 import { useCalculatePension } from "@/hooks/mutations/useCalculatePension";
+import { CalculatedPensionDto } from "@/api/dtos/calculated-pension.dto";
 
 interface SalaryIndexingData {
   year: number;
@@ -56,12 +58,57 @@ const SICK_LEAVE_DATA = {
 };
 
 export default function SimulationPage() {
-  const { mutate, isPending } = useCalculatePension();
+  const {
+    mutate,
+    isPending,
+    data: calculationData,
+    error: calculationError,
+  } = useCalculatePension();
   const router = useRouter();
   const [currentStep, setCurrentStep] = useState(1);
   const [isCalculating, setIsCalculating] = useState(false);
+  const [pensionResults, setPensionResults] = useState<
+    CalculatedPensionDto | undefined
+  >();
+  const previousFormValuesRef = useRef<SimulationFormInterface | null>(null);
+  const lastCalculatedStepRef = useRef<number>(0);
 
   const totalSteps = 5;
+
+  // Helper function to check if form values have actually changed
+  const hasFormValuesChanged = (
+    currentValues: SimulationFormInterface
+  ): boolean => {
+    const previousValues = previousFormValuesRef.current;
+    if (!previousValues) {
+      console.log("No previous values, considering as changed");
+      return true;
+    }
+
+    // Check only the fields that affect pension calculation
+    const relevantFields: (keyof SimulationFormInterface)[] = [
+      "age",
+      "gender",
+      "grossSalary",
+      "workStartYear",
+      "workEndYear",
+      "includeSickLeave",
+    ];
+
+    const hasChanged = relevantFields.some((field) => {
+      const current = currentValues[field];
+      const previous = previousValues[field];
+
+      // Handle date comparison (these fields are numbers, not dates)
+      if (field === "workStartYear" || field === "workEndYear") {
+        return current !== previous;
+      }
+
+      return current !== previous;
+    });
+
+    return hasChanged;
+  };
 
   const form = useForm<SimulationFormInterface>({
     resolver: zodResolver(simulationFormSchema),
@@ -102,11 +149,84 @@ export default function SimulationPage() {
     }
   }, [watchedAge, watchedGender, setValue]);
 
+  // Handle calculation results
+  useEffect(() => {
+    if (calculationData) {
+      setPensionResults(calculationData);
+    }
+  }, [calculationData]);
+
+  // Real-time calculation trigger only when form values change
+  useEffect(() => {
+    const previousFormValues = previousFormValuesRef.current;
+    const formValues = getValues();
+
+    const shouldChangeFromStep1 =
+      currentStep === 2 &&
+      (previousFormValues?.age !== formValues.age ||
+        previousFormValues?.gender !== formValues.gender ||
+        previousFormValues?.grossSalary !== formValues.grossSalary ||
+        // workEndYear can change due to age/gender auto-calculation
+        previousFormValues?.workEndYear !== formValues.workEndYear);
+
+    const shouldChangeFromStep2 =
+      currentStep === 3 &&
+      (previousFormValues?.workStartYear !== formValues.workStartYear ||
+        previousFormValues?.workEndYear !== formValues.workEndYear);
+
+    const shouldChangeFromStep3 =
+      currentStep === 4 &&
+      (previousFormValues?.includeZusFields !== formValues.includeZusFields ||
+        (formValues.includeZusFields === true &&
+          (previousFormValues?.zusAccountFunds !== formValues.zusAccountFunds ||
+            previousFormValues?.zusSubAccountFunds !==
+              formValues.zusSubAccountFunds)) ||
+        previousFormValues?.includeSickLeave !== formValues.includeSickLeave);
+
+    const shouldChange =
+      shouldChangeFromStep1 || shouldChangeFromStep2 || shouldChangeFromStep3;
+
+    // Only recalculate if we have minimum data and are on step 2+
+    if (shouldChange) {
+      // Check if this is the first time we're calculating for this step
+      const isFirstCalculation = !previousFormValuesRef.current;
+      const isNewStep = currentStep > lastCalculatedStepRef.current;
+
+      // Trigger if it's the first time, a forward step, or per-step relevant fields changed
+      if (isFirstCalculation || isNewStep || shouldChange) {
+        const timeoutId = setTimeout(() => {
+          calculateProjection(formValues);
+        }, 500);
+
+        return () => clearTimeout(timeoutId);
+      }
+    }
+  }, [currentStep]);
+
+  // Removed per requirement: do not recalc on field changes within a step
+
   const formatCurrency = (value: string) => {
     const numbers = value.replace(/\D/g, "");
     if (!numbers) return "";
     return new Intl.NumberFormat("pl-PL").format(parseInt(numbers));
   };
+
+  const includeZusFields = useWatch({
+    control,
+    name: "includeZusFields",
+  }) as boolean;
+  const includeSickLeave = useWatch({
+    control,
+    name: "includeSickLeave",
+  }) as boolean;
+  const zusAccountFunds = useWatch({
+    control,
+    name: "zusAccountFunds",
+  }) as number | undefined;
+  const zusSubAccountFunds = useWatch({
+    control,
+    name: "zusSubAccountFunds",
+  }) as number | undefined;
 
   const isStepValid = (step: number): boolean => {
     const formValues = watch();
@@ -152,27 +272,48 @@ export default function SimulationPage() {
   };
 
   const calculateProjection = async (data: SimulationFormInterface) => {
-    // Convert to DTO format for API call
-    const currentYear = new Date().getFullYear();
-    const birthDate = new Date(currentYear - data.age, 0, 1);
-    const workStartDate = new Date(data.workStartYear, 0, 1);
-    const workEndDate = new Date(data.workEndYear, 0, 1);
+    try {
+      setIsCalculating(true);
 
-    const dtoPayload = {
-      age: data.age,
-      gender: data.gender || "male",
-      birthDate,
-      grossSalary: data.grossSalary,
-      workStartYear: workStartDate,
-      plannedWorkEndYear: workEndDate,
-      ...(data.includeZusFields && {
-        amountOfMoneyInZusAccount: data.zusAccountFunds || 0,
-        amountOfMoneyInZusSubAccount: data.zusSubAccountFunds || 0,
-      }),
-      includeSickLeave: data.includeSickLeave || false,
-    };
+      // Convert to DTO format for API call
+      const currentYear = new Date().getFullYear();
+      const birthDate = new Date(currentYear - data.age, 0, 1);
+      const workStartDate = new Date(data.workStartYear, 0, 1);
+      const workEndDate = new Date(data.workEndYear, 0, 1);
 
-    mutate(dtoPayload);
+      const dtoPayload = {
+        age: data.age,
+        gender: data.gender || "male",
+        birthDate,
+        grossSalary: data.grossSalary,
+        workStartYear: workStartDate,
+        plannedWorkEndYear: workEndDate,
+        ...(data.includeZusFields && {
+          amountOfMoneyInZusAccount: data.zusAccountFunds || 0,
+          amountOfMoneyInZusSubAccount: data.zusSubAccountFunds || 0,
+        }),
+        includeSickLeave: data.includeSickLeave || false,
+      };
+
+      // Use the mutation which now handles fallback to mock data
+      mutate(dtoPayload, {
+        onSuccess: (result) => {
+          setPensionResults(result);
+          setIsCalculating(false);
+          // Update the previous values reference after successful calculation
+          previousFormValuesRef.current = { ...data };
+          // Update the last calculated step
+          lastCalculatedStepRef.current = currentStep;
+        },
+        onError: (error) => {
+          console.error("Calculation error:", error);
+          setIsCalculating(false);
+        },
+      });
+    } catch (error) {
+      console.error("Calculation error:", error);
+      setIsCalculating(false);
+    }
   };
 
   const handleSkipPostalCode = () => {
@@ -299,9 +440,7 @@ export default function SimulationPage() {
             </div>
 
             {/* Step Content */}
-            <div className="space-y-6">
-              {renderStepContent()}
-            </div>
+            <div className="space-y-6">{renderStepContent()}</div>
 
             {/* Form Actions */}
             <FormActions
@@ -320,27 +459,38 @@ export default function SimulationPage() {
                     }
                   : undefined
               }
-              onSkip={currentStep === totalSteps ? handleSkipPostalCode : undefined}
+              onSkip={
+                currentStep === totalSteps ? handleSkipPostalCode : undefined
+              }
               isBackDisabled={currentStep === 1}
               isNextDisabled={!isStepValid(currentStep)}
               showBack={true}
               showNext={currentStep < totalSteps}
               showSubmit={currentStep === totalSteps}
               showSkip={currentStep === totalSteps}
-              submitLabel={currentStep === totalSteps ? "Zapisz i zakończ" : undefined}
+              submitLabel={
+                currentStep === totalSteps ? "Zapisz i zakończ" : undefined
+              }
               isLoading={isPending}
             />
           </div>
         </div>
 
-        {/* Right Column - Placeholder */}
+        {/* Right Column - Results Panel */}
         <div className="relative h-screen overflow-hidden">
           <div className="absolute inset-0 p-8 flex items-center justify-center">
-            <RealtimePlaceholderPanel />
+            {pensionResults ? (
+              <RealtimeResultsPanel
+                data={pensionResults}
+                isLoading={isCalculating || isPending}
+                error={calculationError?.message}
+              />
+            ) : (
+              <RealtimePlaceholderPanel />
+            )}
           </div>
         </div>
       </div>
     </div>
   );
 }
-
