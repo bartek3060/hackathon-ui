@@ -1,9 +1,10 @@
+import { v4 as uuidv4 } from "uuid";
+
 const SESSION_ID_KEY = "app_session_id";
 
 function generateSessionId(): string {
-  return `${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+  return uuidv4();
 }
-
 export function getSessionId(): string {
   if (typeof window === "undefined") {
     return "ssr_session";
