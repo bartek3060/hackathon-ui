@@ -7,9 +7,10 @@ import { GreenButton } from "@/components/GreenButton";
 
 interface PensionInputFormProps {
   onSubmit: (amount: string) => void;
+  isLoading?: boolean;
 }
 
-export function PensionInputForm({ onSubmit }: PensionInputFormProps) {
+export function PensionInputForm({ onSubmit, isLoading }: PensionInputFormProps) {
   const [desiredAmount, setDesiredAmount] = useState("");
 
   const formatCurrency = (value: string) => {
@@ -44,7 +45,8 @@ export function PensionInputForm({ onSubmit }: PensionInputFormProps) {
               value={formatCurrency(desiredAmount)}
               onChange={handleAmountChange}
               placeholder="5 000"
-              className="text-2xl font-semibold h-14 pr-16 border-2 border-gray-300 focus-visible:border-custom-2 focus-visible:ring-custom-2"
+              disabled={isLoading}
+              className="text-2xl font-semibold h-14 pr-16 border-2 border-gray-300 focus-visible:border-custom-2 focus-visible:ring-custom-2 disabled:opacity-50"
             />
             <span className="absolute right-4 top-1/2 -translate-y-1/2 text-lg font-semibold text-gray-400">
               PLN
@@ -52,10 +54,10 @@ export function PensionInputForm({ onSubmit }: PensionInputFormProps) {
           </div>
           <GreenButton
             type="submit"
-            disabled={!desiredAmount}
+            disabled={!desiredAmount || isLoading}
             className="h-14 px-8 text-base font-semibold"
           >
-            Pokaż symulację
+            {isLoading ? "Ładowanie..." : "Pokaż symulację"}
           </GreenButton>
         </div>
         <p className="text-sm text-gray-500">
