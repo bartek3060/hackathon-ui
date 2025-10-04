@@ -477,8 +477,8 @@ export default function SimulationPage() {
         </div>
 
         {/* Right Column - Results Panel */}
-        <div className="relative h-screen overflow-hidden">
-          <div className="absolute inset-0 p-8 flex items-center justify-center">
+        <div className="relative h-screen">
+          <div className="absolute inset-0 p-8 overflow-y-auto">
             {pensionResults ? (
               <RealtimeResultsPanel
                 data={pensionResults}
