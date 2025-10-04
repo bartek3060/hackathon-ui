@@ -87,15 +87,13 @@ export function Step4Review({
           </Card>
         </div>
 
-        {(formData.zusAccountFunds ||
-          formData.zusSubAccountFunds ||
-          formData.includeSickLeave) && (
+        {(formData.includeZusFields || formData.includeSickLeave) && (
           <Card>
             <CardHeader className="pb-3">
               <CardTitle className="text-sm">Dodatkowe informacje</CardTitle>
             </CardHeader>
             <CardContent className="space-y-2">
-              {!!formData.zusAccountFunds && (
+              {formData.includeZusFields && formData.zusAccountFunds && (
                 <div className="flex justify-between">
                   <span className="text-sm text-muted-foreground">
                     Konto ZUS:
@@ -108,7 +106,7 @@ export function Step4Review({
                   </span>
                 </div>
               )}
-              {!!formData.zusSubAccountFunds && (
+              {formData.includeZusFields && formData.zusSubAccountFunds && (
                 <div className="flex justify-between">
                   <span className="text-sm text-muted-foreground">
                     Subkonto ZUS:

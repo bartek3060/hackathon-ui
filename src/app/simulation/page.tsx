@@ -167,10 +167,6 @@ export default function SimulationPage() {
   };
 
   const handleStepClick = (stepIndex: number) => {
-    // Allow navigation to any step that is valid or already completed
-    // Step 0 is always accessible (basic info)
-    // Allow going back to any previous step
-    // Allow going forward only if current step is valid
     if (
       stepIndex === 0 ||
       stepIndex < currentStep ||
@@ -204,8 +200,10 @@ export default function SimulationPage() {
       grossSalary: data.grossSalary,
       workStartYear: workStartDate,
       plannedWorkEndYear: workEndDate,
-      amountOfMoneyInZusAccount: data.zusAccountFunds || 0,
-      amountOfMoneyInZusSubAccount: data.zusSubAccountFunds || 0,
+      ...(data.includeZusFields && {
+        amountOfMoneyInZusAccount: data.zusAccountFunds || 0,
+        amountOfMoneyInZusSubAccount: data.zusSubAccountFunds || 0,
+      }),
       includeSickLeave: data.includeSickLeave || false,
     };
 
