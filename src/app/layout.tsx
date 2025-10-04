@@ -17,6 +17,8 @@ export default function RootLayout({
           {children}
         </body>
       </QueryClientProvider>
-    </html>
+    </html> 
+
+    
   );
 }
