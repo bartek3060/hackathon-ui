@@ -1,9 +1,8 @@
 "use client";
 
-import { testGetEndpoint } from "@/api/test-endpoint";
 import "./globals.css";
-import { useEffect } from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { PensionFactNotification } from "@/components/PensionFactNotification";
 
 export default function RootLayout({
   children,
@@ -13,9 +12,12 @@ export default function RootLayout({
   const queryClient = new QueryClient();
 
   return (
-    <html lang="en">
+    <html lang="pl" className="dark">
       <QueryClientProvider client={queryClient}>
-        <body>{children}</body>
+        <body>
+          {children}
+          <PensionFactNotification />
+        </body>
       </QueryClientProvider>
     </html>
   );
