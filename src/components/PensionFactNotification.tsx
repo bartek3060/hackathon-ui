@@ -9,26 +9,32 @@ export function PensionFactNotification() {
   const [isVisible, setIsVisible] = useState(false);
 
   useEffect(() => {
+    let hideTimeout: NodeJS.Timeout;
+
     const showFact = () => {
       setFact(getRandomPensionFact());
       setIsVisible(true);
 
-      setTimeout(() => {
+      if (hideTimeout) {
+        clearTimeout(hideTimeout);
+      }
+
+      hideTimeout = setTimeout(() => {
         setIsVisible(false);
       }, 10000);
     };
 
     const initialDelay = setTimeout(showFact, 3000);
-
-    const interval = setInterval(showFact, 15000);
+    const interval = setInterval(showFact, 20000);
 
     return () => {
       clearTimeout(initialDelay);
+      clearTimeout(hideTimeout);
       clearInterval(interval);
     };
   }, []);
 
-  if (!fact) return null;
+  if (!isVisible) return null;
 
   return (
     <div
