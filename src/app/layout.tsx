@@ -2,7 +2,6 @@
 
 import "./globals.css";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { PensionFactNotification } from "@/components/PensionFactNotification";
 
 export default function RootLayout({
   children,
@@ -16,7 +15,6 @@ export default function RootLayout({
       <QueryClientProvider client={queryClient}>
         <body>
           {children}
-          <PensionFactNotification />
         </body>
       </QueryClientProvider>
     </html>
