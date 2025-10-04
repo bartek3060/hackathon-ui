@@ -7,6 +7,7 @@ interface StepperProps {
   currentStep: number;
   totalSteps: number;
   className?: string;
+  onStepClick?: (step: number) => void;
 }
 
 interface StepProps {
@@ -18,25 +19,34 @@ interface StepProps {
   className?: string;
 }
 
-export function Stepper({ currentStep, totalSteps, className }: StepperProps) {
+export function Stepper({
+  currentStep,
+  totalSteps,
+  className,
+  onStepClick,
+}: StepperProps) {
   return (
     <div className={cn("w-full", className)}>
       <div className="flex items-center justify-between">
         {Array.from({ length: totalSteps }, (_, index) => (
           <React.Fragment key={index}>
             <div className="flex flex-col items-center">
-              <div
+              <button
+                onClick={() => onStepClick?.(index + 1)}
+                disabled={!onStepClick}
                 className={cn(
                   "w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium transition-colors",
                   index < currentStep
-                    ? "bg-green-500 text-white"
+                    ? "bg-green-500 text-white hover:bg-green-600"
                     : index === currentStep
                     ? "bg-blue-500 text-white"
-                    : "bg-gray-200 text-gray-500"
+                    : "bg-gray-200 text-gray-500 hover:bg-gray-300",
+                  onStepClick && "cursor-pointer",
+                  !onStepClick && "cursor-default"
                 )}
               >
-                {index < currentStep ? "✓" : index + 1}
-              </div>
+                {index + 1 < currentStep ? "✓" : index + 1}
+              </button>
               <div className="mt-2 text-xs text-center">
                 <div className="font-medium text-gray-900">
                   Krok {index + 1}
@@ -47,7 +57,7 @@ export function Stepper({ currentStep, totalSteps, className }: StepperProps) {
               <div
                 className={cn(
                   "flex-1 h-0.5 mx-4 transition-colors",
-                  index < currentStep ? "bg-green-500" : "bg-gray-200"
+                  index + 1 < currentStep ? "bg-green-500" : "bg-gray-200"
                 )}
               />
             )}
