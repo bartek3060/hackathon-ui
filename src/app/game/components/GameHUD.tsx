@@ -7,7 +7,8 @@ import { Pause, Play, Volume2, VolumeX } from "lucide-react";
 import { audioManager } from "../audio";
 
 export function GameHUD() {
-  const { phase, score, lives, level, multiplier, pause, resume } = useGameStore();
+  const { phase, score, lives, level, multiplier, pause, resume } =
+    useGameStore();
   const [isMuted, setIsMuted] = useState(false);
 
   useEffect(() => {
@@ -39,7 +40,9 @@ export function GameHUD() {
         <div className="flex items-center gap-6">
           <div className="flex flex-col">
             <span className="text-xs font-medium text-white/60">Wynik</span>
-            <span className="text-2xl font-bold text-white tabular-nums">{score}</span>
+            <span className="text-2xl font-bold text-white tabular-nums">
+              {score}
+            </span>
           </div>
 
           <div className="h-10 w-px bg-white/20" />
@@ -55,7 +58,9 @@ export function GameHUD() {
 
           <div className="flex flex-col">
             <span className="text-xs font-medium text-white/60">Poziom</span>
-            <span className="text-2xl font-bold text-white tabular-nums">{level}</span>
+            <span className="text-2xl font-bold text-white tabular-nums">
+              {level}
+            </span>
           </div>
 
           <div className="h-10 w-px bg-white/20" />
@@ -110,5 +115,3 @@ export function GameHUD() {
     </div>
   );
 }
-
-
