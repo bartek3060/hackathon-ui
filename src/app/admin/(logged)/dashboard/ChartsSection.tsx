@@ -13,7 +13,70 @@ interface ChartsSectionProps {
   stats: StatisticsData;
 }
 
+type AgeRange = {
+  label: string;
+  count: number;
+  color: string;
+};
+
+type AgeBarProps = {
+  range: AgeRange;
+  totalUsage: number;
+};
+
+const AgeBar = ({ range, totalUsage }: AgeBarProps) => {
+  const percentage = totalUsage > 0 ? (range.count / totalUsage) * 100 : 0;
+
+  return (
+    <div className="flex justify-between items-center">
+      <span className="text-sm">{range.label}</span>
+      <div className="flex items-center space-x-2">
+        <div className="w-24 bg-gray-200 rounded-full h-2">
+          <div
+            className={`${range.color} h-2 rounded-full`}
+            style={{ width: `${percentage}%` }}
+          ></div>
+        </div>
+        <span className="text-xs text-gray-500">{range.count}</span>
+      </div>
+    </div>
+  );
+};
+
 export function ChartsSection({ stats }: ChartsSectionProps) {
+  const ageRanges: AgeRange[] = [
+    {
+      label: "Poniżej 20 lat",
+      count: stats.ageStats.under20,
+      color: "bg-blue-600",
+    },
+    {
+      label: "20-29 lat",
+      count: stats.ageStats.age20to29,
+      color: "bg-green-600",
+    },
+    {
+      label: "30-39 lat",
+      count: stats.ageStats.age30to39,
+      color: "bg-purple-600",
+    },
+    {
+      label: "40-49 lat",
+      count: stats.ageStats.age40to49,
+      color: "bg-orange-600",
+    },
+    {
+      label: "50-59 lat",
+      count: stats.ageStats.age50to59,
+      color: "bg-red-600",
+    },
+    {
+      label: "Powyżej 59 lat",
+      count: stats.ageStats.over59,
+      color: "bg-indigo-600",
+    },
+  ];
+
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
       <Card>
@@ -54,42 +117,13 @@ export function ChartsSection({ stats }: ChartsSectionProps) {
         </CardHeader>
         <CardContent>
           <div className="space-y-3">
-            <div className="flex justify-between items-center">
-              <span className="text-sm">30-40 lat</span>
-              <div className="flex items-center space-x-2">
-                <div className="w-24 bg-gray-200 rounded-full h-2">
-                  <div
-                    className="bg-blue-600 h-2 rounded-full"
-                    style={{ width: "20%" }}
-                  ></div>
-                </div>
-                <span className="text-xs text-gray-500">1</span>
-              </div>
-            </div>
-            <div className="flex justify-between items-center">
-              <span className="text-sm">40-50 lat</span>
-              <div className="flex items-center space-x-2">
-                <div className="w-24 bg-gray-200 rounded-full h-2">
-                  <div
-                    className="bg-green-600 h-2 rounded-full"
-                    style={{ width: "60%" }}
-                  ></div>
-                </div>
-                <span className="text-xs text-gray-500">3</span>
-              </div>
-            </div>
-            <div className="flex justify-between items-center">
-              <span className="text-sm">50+ lat</span>
-              <div className="flex items-center space-x-2">
-                <div className="w-24 bg-gray-200 rounded-full h-2">
-                  <div
-                    className="bg-purple-600 h-2 rounded-full"
-                    style={{ width: "20%" }}
-                  ></div>
-                </div>
-                <span className="text-xs text-gray-500">1</span>
-              </div>
-            </div>
+            {ageRanges.map((range) => (
+              <AgeBar
+                key={range.label}
+                range={range}
+                totalUsage={stats.totalUsage}
+              />
+            ))}
           </div>
         </CardContent>
       </Card>

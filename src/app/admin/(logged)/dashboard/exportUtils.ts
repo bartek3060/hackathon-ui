@@ -1,6 +1,7 @@
+import { ReceiveAdminReportDto } from "@/api/dtos/receive-admin-report.dto";
 import { SimulatorUsage } from "./types";
 
-export function exportToCSV(data: SimulatorUsage[]) {
+export function exportToCSV(data: ReceiveAdminReportDto[]) {
   // Calculate comprehensive statistics
   const stats = {
     totalUsage: data.length,
@@ -8,34 +9,42 @@ export function exportToCSV(data: SimulatorUsage[]) {
       data.reduce((sum, item) => sum + item.expectedPension, 0) / data.length
     ),
     avgActualPension: Math.round(
-      data.reduce((sum, item) => sum + item.actualPension, 0) / data.length
+      data.reduce((sum, item) => sum + item.realPensionWithIllness, 0) /
+        data.length
     ),
     avgRealizedPension: Math.round(
-      data.reduce((sum, item) => sum + item.realizedPension, 0) / data.length
+      data.reduce((sum, item) => sum + item.realisticPensionWithoutIllness, 0) /
+        data.length
     ),
     avgAge: Math.round(
       data.reduce((sum, item) => sum + item.age, 0) / data.length
     ),
     avgSalary: Math.round(
-      data.reduce((sum, item) => sum + item.salary, 0) / data.length
+      data.reduce((sum, item) => sum + item.salaryAmount, 0) / data.length
     ),
     avgAccumulatedFunds: Math.round(
-      data.reduce((sum, item) => sum + item.accumulatedFunds, 0) / data.length
+      data.reduce(
+        (sum, item) => sum + item.accumulatedFundsInZusAccountAmount,
+        0
+      ) / data.length
     ),
     avgSubAccountFunds: Math.round(
-      data.reduce((sum, item) => sum + item.subAccountFunds, 0) / data.length
+      data.reduce(
+        (sum, item) => sum + item.accumulatedFundsInZusSubAccountAmount,
+        0
+      ) / data.length
     ),
     maleCount: data.filter((item) => item.gender === "M").length,
     femaleCount: data.filter((item) => item.gender === "F").length,
-    sickPeriodsCount: data.filter((item) => item.includesSickPeriods).length,
+    sickPeriodsCount: data.filter((item) => item.realPensionWithIllness).length,
     minExpectedPension: Math.min(...data.map((item) => item.expectedPension)),
     maxExpectedPension: Math.max(...data.map((item) => item.expectedPension)),
-    minActualPension: Math.min(...data.map((item) => item.actualPension)),
-    maxActualPension: Math.max(...data.map((item) => item.actualPension)),
+    minActualPension: Math.min(...data.map((item) => item.salaryAmount)),
+    maxActualPension: Math.max(...data.map((item) => item.salaryAmount)),
     minAge: Math.min(...data.map((item) => item.age)),
     maxAge: Math.max(...data.map((item) => item.age)),
     uniquePostalCodes: [...new Set(data.map((item) => item.postalCode))].length,
-    uniqueDates: [...new Set(data.map((item) => item.usageDate))].length,
+    uniqueDates: [...new Set(data.map((item) => item.createdAt))].length,
   };
 
   // Create CSV content with summary section
@@ -103,17 +112,16 @@ export function exportToCSV(data: SimulatorUsage[]) {
 
   const dataRows = data.map((row) =>
     [
-      row.usageDate,
-      row.usageTime,
+      row.createdAt,
       row.expectedPension,
       row.age,
       row.gender,
-      row.salary,
-      row.includesSickPeriods ? "Tak" : "Nie",
-      row.accumulatedFunds,
-      row.subAccountFunds,
-      row.actualPension,
-      row.realizedPension,
+      row.salaryAmount,
+      row.sickPeriodDays ? "Tak" : "Nie",
+      row.accumulatedFundsInZusAccountAmount,
+      row.accumulatedFundsInZusSubAccountAmount,
+      row.realPensionWithIllness,
+      row.realisticPensionWithIllness,
       row.postalCode,
     ].join(",")
   );
