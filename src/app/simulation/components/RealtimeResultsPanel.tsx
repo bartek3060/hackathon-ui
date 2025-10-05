@@ -695,7 +695,7 @@ export function RealtimeResultsPanel({
                         Prognozowane (z chorobowymi):
                       </span>
                       <span className="font-semibold">
-                        {formatCurrency(data.pensionWithSick)}
+                        {formatCurrency(data.pensionWithSickRealistic)}
                       </span>
                     </div>
                     <div className="flex justify-between items-center">
@@ -703,7 +703,7 @@ export function RealtimeResultsPanel({
                         Prognozowane (bez chorobowych):
                       </span>
                       <span className="font-semibold">
-                        {formatCurrency(data.pensionWithoutSick)}
+                        {formatCurrency(data.pensionWithSickRealistic)}
                       </span>
                     </div>
                     {data.pensionWithSick < data.expectedPension && (

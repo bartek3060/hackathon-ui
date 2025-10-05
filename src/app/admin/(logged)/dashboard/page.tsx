@@ -7,6 +7,7 @@ import { AdminHeader } from "./AdminHeader";
 import { StatisticsCards } from "./StatisticsCards";
 import { ChartsSection } from "./ChartsSection";
 import { DataTable } from "./DataTable";
+import { PostalCodeMap } from "./PostalCodeMap";
 import { exportToCSV } from "./exportUtils";
 import { useAdminStats } from "@/hooks/queries/useAdminStats";
 import { useAdminReport } from "@/hooks/queries/useAdminReport";
@@ -108,6 +109,10 @@ export default function AdminDashboard() {
               onExport={handleExport}
               onPrint={handlePrint}
             />
+          </div>
+
+          <div className="mt-8">
+            <PostalCodeMap data={adminReport?.data || []} />
           </div>
         </main>
       </div>
