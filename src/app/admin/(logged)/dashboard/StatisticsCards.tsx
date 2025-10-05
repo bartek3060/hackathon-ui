@@ -62,7 +62,9 @@ export function StatisticsCards({ stats }: StatisticsCardsProps) {
           <Calendar className="h-4 w-4 text-orange-600" />
         </CardHeader>
         <CardContent>
-          <div className="text-2xl font-bold">{stats.avgAge} lat</div>
+          <div className="text-2xl font-bold">
+            {Math.floor(stats.avgAge)} lat
+          </div>
           <p className="text-xs text-gray-500 mt-1">Użytkowników</p>
         </CardContent>
       </Card>

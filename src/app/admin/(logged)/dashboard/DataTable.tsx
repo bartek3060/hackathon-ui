@@ -18,15 +18,19 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { v4 as uuidv4 } from "uuid";
 import { SimulatorUsage } from "./types";
+import { ReceiveAdminReportDto } from "@/api/dtos/receive-admin-report.dto";
+import { uuid } from "zod";
 
 interface DataTableProps {
-  data: SimulatorUsage[];
+  data: ReceiveAdminReportDto[];
   onExport: () => void;
   onPrint: () => void;
 }
 
 export function DataTable({ data, onExport, onPrint }: DataTableProps) {
+  console.log(data);
   return (
     <Card>
       <CardHeader>
@@ -63,7 +67,6 @@ export function DataTable({ data, onExport, onPrint }: DataTableProps) {
             <TableHeader>
               <TableRow>
                 <TableHead>Data użycia</TableHead>
-                <TableHead>Godzina</TableHead>
                 <TableHead>Emerytura oczekiwana</TableHead>
                 <TableHead>Wiek</TableHead>
                 <TableHead>Płeć</TableHead>
@@ -78,41 +81,42 @@ export function DataTable({ data, onExport, onPrint }: DataTableProps) {
             </TableHeader>
             <TableBody>
               {data.map((item) => (
-                <TableRow key={item.id}>
-                  <TableCell>{item.usageDate}</TableCell>
-                  <TableCell>{item.usageTime}</TableCell>
+                <TableRow key={uuidv4()}>
+                  <TableCell>{item.createdAt}</TableCell>
                   <TableCell>
                     {item.expectedPension.toLocaleString()} zł
                   </TableCell>
                   <TableCell>{item.age}</TableCell>
                   <TableCell>
                     <Badge
-                      variant={item.gender === "M" ? "default" : "secondary"}
+                      variant={item.gender === "man" ? "default" : "secondary"}
                     >
-                      {item.gender === "M" ? "M" : "K"}
+                      {item.gender === "man" ? "man" : "woman"}
                     </Badge>
                   </TableCell>
-                  <TableCell>{item.salary.toLocaleString()} zł</TableCell>
+                  <TableCell>{item.salaryAmount.toLocaleString()} zł</TableCell>
                   <TableCell>
                     <Badge
-                      variant={
-                        item.includesSickPeriods ? "destructive" : "outline"
-                      }
+                      variant={item.sickPeriodDays ? "destructive" : "outline"}
                     >
-                      {item.includesSickPeriods ? "Tak" : "Nie"}
+                      {item.sickPeriodDays ? "Tak" : "Nie"}
                     </Badge>
                   </TableCell>
                   <TableCell>
-                    {item.accumulatedFunds.toLocaleString()} zł
+                    {item.accumulatedFundsInZusAccountAmount?.toLocaleString() ??
+                      "Puste"}{" "}
+                    zł
                   </TableCell>
                   <TableCell>
-                    {item.subAccountFunds.toLocaleString()} zł
+                    {item.accumulatedFundsInZusSubAccountAmount?.toLocaleString() ??
+                      "Puste"}{" "}
+                    zł
                   </TableCell>
                   <TableCell>
-                    {item.actualPension.toLocaleString()} zł
+                    {item.realPensionWithIllness.toLocaleString()} zł
                   </TableCell>
                   <TableCell>
-                    {item.realizedPension.toLocaleString()} zł
+                    {item.realisticPensionWithIllness.toLocaleString()} zł
                   </TableCell>
                   <TableCell>
                     <div className="flex items-center space-x-1">

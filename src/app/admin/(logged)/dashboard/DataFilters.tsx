@@ -23,7 +23,7 @@ interface DataFiltersProps {
   setStartDate: (value: string) => void;
   endDate: string;
   setEndDate: (value: string) => void;
-  uniqueDates: string[];
+  onSearch?: () => void;
 }
 
 export function DataFilters({
@@ -37,7 +37,7 @@ export function DataFilters({
   setStartDate,
   endDate,
   setEndDate,
-  uniqueDates,
+  onSearch,
 }: DataFiltersProps) {
   const hasActiveFilters =
     searchTerm ||
@@ -65,7 +65,17 @@ export function DataFilters({
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             className="w-64"
+            onKeyDown={(e) => {
+              if (e.key === "Enter" && onSearch) {
+                onSearch();
+              }
+            }}
           />
+          {onSearch && (
+            <Button onClick={onSearch} size="sm">
+              Szukaj
+            </Button>
+          )}
         </div>
         <Select value={genderFilter} onValueChange={setGenderFilter}>
           <SelectTrigger className="w-32">
@@ -73,21 +83,8 @@ export function DataFilters({
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">Wszystkie</SelectItem>
-            <SelectItem value="M">Mężczyźni</SelectItem>
-            <SelectItem value="F">Kobiety</SelectItem>
-          </SelectContent>
-        </Select>
-        <Select value={dateFilter} onValueChange={setDateFilter}>
-          <SelectTrigger className="w-40">
-            <SelectValue placeholder="Konkretna data" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">Wszystkie daty</SelectItem>
-            {uniqueDates.map((date) => (
-              <SelectItem key={date} value={date}>
-                {new Date(date).toLocaleDateString("pl-PL")}
-              </SelectItem>
-            ))}
+            <SelectItem value="man">Mężczyźni</SelectItem>
+            <SelectItem value="woman">Kobiety</SelectItem>
           </SelectContent>
         </Select>
       </div>
