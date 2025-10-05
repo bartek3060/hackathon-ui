@@ -1,0 +1,18 @@
+<svg width="40" height="40" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="coinGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#FFD700;stop-opacity:1" />
+      <stop offset="50%" style="stop-color:#FFC700;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#FFB700;stop-opacity:1" />
+    </linearGradient>
+    <radialGradient id="coinShine" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" style="stop-color:#FFEB3B;stop-opacity:0.8" />
+      <stop offset="100%" style="stop-color:#FFD700;stop-opacity:0" />
+    </radialGradient>
+  </defs>
+  <circle cx="20" cy="20" r="18" fill="url(#coinGrad)" stroke="#CC9900" stroke-width="2"/>
+  <circle cx="20" cy="20" r="15" fill="none" stroke="#FFEB3B" stroke-width="1" opacity="0.6"/>
+  <ellipse cx="15" cy="12" rx="8" ry="5" fill="url(#coinShine)"/>
+  <text x="20" y="26" font-family="Arial, sans-serif" font-size="16" font-weight="bold" fill="#CC9900" text-anchor="middle">zł</text>
+</svg>
+
