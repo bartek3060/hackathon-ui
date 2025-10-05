@@ -9,8 +9,8 @@ export interface CalculateDetailedPensionDto {
   amountOfMoneyInZusSubAccount: number;
   includeSickLeave: boolean;
   postalCode: string;
-  particularSalaries:{year:number, salary:number}[];
-  particularSickLeave:{year:number, days:number}[];
-  yearIndexation: number[]
+  particularSalaries: { year: number; salary: number }[];
+  particularSickLeave: { year: number; days: number }[];
+  yearIndexation: number[];
   shouldUsePreviousZusAmount: boolean;
 }
