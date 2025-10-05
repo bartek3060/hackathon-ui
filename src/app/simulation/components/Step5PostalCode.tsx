@@ -13,7 +13,6 @@ interface Step5PostalCodeProps {
 export function Step5PostalCode({ control, errors }: Step5PostalCodeProps) {
   return (
     <div className="space-y-6">
-      {/* Header Section */}
       <div className="space-y-3">
         <div className="flex items-center gap-2 mb-3">
           <span className="text-2xl" aria-hidden="true">
@@ -31,7 +30,6 @@ export function Step5PostalCode({ control, errors }: Step5PostalCodeProps) {
         </p>
       </div>
 
-      {/* Info Banner */}
       <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
         <div className="flex items-start gap-3">
           <svg
@@ -61,7 +59,6 @@ export function Step5PostalCode({ control, errors }: Step5PostalCodeProps) {
         </div>
       </div>
 
-      {/* Form Field */}
       <div className="space-y-4">
         <Label htmlFor="postalCode" className="text-base font-medium">
           Kod pocztowy
@@ -78,7 +75,6 @@ export function Step5PostalCode({ control, errors }: Step5PostalCodeProps) {
                 value={field.value || ""}
                 onChange={(e) => {
                   const value = e.target.value;
-                  // Auto-format: add dash after 2 digits
                   const formatted = value
                     .replace(/\D/g, "")
                     .replace(/^(\d{2})(\d)/, "$1-$2")
@@ -102,7 +98,6 @@ export function Step5PostalCode({ control, errors }: Step5PostalCodeProps) {
         />
       </div>
 
-      {/* Privacy Note */}
       <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
         <div className="flex items-start gap-2">
           <svg

@@ -18,10 +18,8 @@ export default function AdminDashboard() {
   const { data: adminStats } = useAdminStats();
   const { data: adminReport } = useAdminReport();
   console.log(adminReport);
-  // const [data, setData] = useState<SimulatorUsage[]>(mockData);
 
   useEffect(() => {
-    // Check if user is authenticated
     const authData = localStorage.getItem("adminAuth");
     if (authData) {
       try {
@@ -49,7 +47,6 @@ export default function AdminDashboard() {
     exportToCSV([]);
   };
 
-  // Calculate statistics
   const statistics: StatisticsData = {
     totalUsage: adminStats?.data?.totalSimulations || 0,
     avgExpectedPension: adminStats?.data?.averageExpectedPension || 0,

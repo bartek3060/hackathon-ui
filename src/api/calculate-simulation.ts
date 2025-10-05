@@ -8,14 +8,12 @@ export const calculatePension = async (
   dto: CalculatePensionDto
 ): Promise<CalculatedPensionDto> => {
   try {
-    // Try real API first
     const response = await axios.post<CalculatedPensionDto>(
       `${API_URL}/api/pension/calculate`,
       dto
     );
     return response.data;
   } catch (error) {
-    // Fallback to mock data if API is not available
     console.warn("API not available, using mock data:", error);
     return generateMockPensionData(dto);
   }

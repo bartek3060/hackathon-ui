@@ -2,7 +2,6 @@ import { z } from "zod";
 
 export const simulationFormSchema = z
   .object({
-    // Required fields
     age: z
       .number({ message: "Wiek jest wymagany" })
       .min(18, "Wiek musi wynosić co najmniej 18 lat")
@@ -33,7 +32,6 @@ export const simulationFormSchema = z
       )
       .max(2100, "Rok zakończenia nie może być późniejszy niż 2100"),
 
-    // Optional fields with defaults
     zusAccountFunds: z
       .number()
       .min(0, "Środki na koncie ZUS nie mogą być ujemne")
@@ -51,11 +49,9 @@ export const simulationFormSchema = z
       .optional()
       .default(0),
 
-    // Options
     includeZusFields: z.boolean().optional().default(false),
     includeSickLeave: z.boolean().optional().default(false),
 
-    // Optional postal code (Step 5)
     postalCode: z
       .string()
       .regex(/^\d{2}-\d{3}$/, "Podaj kod w formacie XX-XXX")
@@ -67,10 +63,8 @@ export const simulationFormSchema = z
     path: ["workEndYear"],
   });
 
-// Define the form data type with all fields required (after defaults are applied)
 export type SimulationFormData = z.infer<typeof simulationFormSchema>;
 
-// Also export a type where optional fields are guaranteed to have values
 export type SimulationFormDataWithDefaults = {
   age: number;
   gender: "man" | "woman";
@@ -83,8 +77,6 @@ export type SimulationFormDataWithDefaults = {
   includeSickLeave: boolean;
 };
 
-// Form interface for component props - uses the type inferred from schema
 export type SimulationFormInterface = z.input<typeof simulationFormSchema>;
 
-// Output type with defaults applied
 export type SimulationFormOutput = z.output<typeof simulationFormSchema>;

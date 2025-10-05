@@ -31,7 +31,6 @@ interface SalaryIndexingData {
   indexation: number;
 }
 
-// Average salary growth data (simplified - in real app this would come from NBP/GUS API)
 const SALARY_GROWTH_DATA: SalaryIndexingData[] = [
   { year: 2020, indexation: 1.05 },
   { year: 2021, indexation: 1.08 },
@@ -45,16 +44,14 @@ const SALARY_GROWTH_DATA: SalaryIndexingData[] = [
   { year: 2029, indexation: 1.03 },
 ];
 
-// Retirement ages in Poland
 const RETIREMENT_AGE = {
   man: 65,
   woman: 60,
 };
 
-// Average sick leave days per year (simplified data)
 const SICK_LEAVE_DATA = {
-  man: 12, // days per year
-  woman: 18, // days per year
+  man: 12,
+  woman: 18,
 };
 
 export default function SimulationPage() {
@@ -75,7 +72,6 @@ export default function SimulationPage() {
 
   const totalSteps = 5;
 
-  // Helper function to check if form values have actually changed
   const hasFormValuesChanged = (
     currentValues: SimulationFormInterface
   ): boolean => {
@@ -85,7 +81,6 @@ export default function SimulationPage() {
       return true;
     }
 
-    // Check only the fields that affect pension calculation
     const relevantFields: (keyof SimulationFormInterface)[] = [
       "age",
       "gender",
@@ -103,7 +98,6 @@ export default function SimulationPage() {
       const current = currentValues[field];
       const previous = previousValues[field];
 
-      // Handle date comparison (these fields are numbers, not dates)
       if (field === "workStartYear" || field === "workEndYear") {
         return current !== previous;
       }
@@ -136,11 +130,9 @@ export default function SimulationPage() {
     formState: { errors, isValid },
   } = form;
 
-  // Watch form values for auto-calculation
   const watchedAge = watch("age");
   const watchedGender = watch("gender");
 
-  // Auto-calculate retirement year based on age and gender
   useEffect(() => {
     if (watchedAge > 0 && watchedGender) {
       const retirementAge =
@@ -153,14 +145,12 @@ export default function SimulationPage() {
     }
   }, [watchedAge, watchedGender, setValue]);
 
-  // Handle calculation results
   useEffect(() => {
     if (calculationData) {
       setPensionResults(calculationData);
     }
   }, [calculationData]);
 
-  // Real-time calculation trigger only when form values change
   useEffect(() => {
     const previousFormValues = previousFormValuesRef.current;
     const formValues = getValues();
@@ -170,7 +160,6 @@ export default function SimulationPage() {
       (previousFormValues?.age !== formValues.age ||
         previousFormValues?.gender !== formValues.gender ||
         previousFormValues?.grossSalary !== formValues.grossSalary ||
-        // workEndYear can change due to age/gender auto-calculation
         previousFormValues?.workEndYear !== formValues.workEndYear);
 
     const shouldChangeFromStep2 =
@@ -190,13 +179,10 @@ export default function SimulationPage() {
     const shouldChange =
       shouldChangeFromStep1 || shouldChangeFromStep2 || shouldChangeFromStep3;
 
-    // Only recalculate if we have minimum data and are on step 2+
     if (shouldChange) {
-      // Check if this is the first time we're calculating for this step
       const isFirstCalculation = !previousFormValuesRef.current;
       const isNewStep = currentStep > lastCalculatedStepRef.current;
 
-      // Trigger if it's the first time, a forward step, or per-step relevant fields changed
       if (isFirstCalculation || isNewStep || shouldChange) {
         const timeoutId = setTimeout(() => {
           calculateProjection(formValues);
@@ -207,7 +193,6 @@ export default function SimulationPage() {
     }
   }, [currentStep]);
 
-  // Removed per requirement: do not recalc on field changes within a step
 
   const formatCurrency = (value: string) => {
     const numbers = value.replace(/\D/g, "");
@@ -253,11 +238,11 @@ export default function SimulationPage() {
           !errors.workEndYear
         );
       case 3:
-        return true; // Optional fields
+        return true;
       case 4:
-        return true; // Review step
+        return true;
       case 5:
-        return true; // Optional postal code step - always valid
+        return true;
       default:
         return false;
     }
@@ -279,10 +264,8 @@ export default function SimulationPage() {
     try {
       setIsCalculating(true);
 
-      // Get session ID
       const sessionId = getSessionId();
 
-      // Convert to DTO format for API call
       const currentYear = new Date().getFullYear();
       const birthDate = new Date(currentYear - data.age, 0, 1)
         .toISOString()
@@ -311,14 +294,11 @@ export default function SimulationPage() {
         postalCode: data.postalCode || "",
       };
 
-      // Use the mutation which now handles fallback to mock data
       mutate(dtoPayload, {
         onSuccess: (result) => {
           setPensionResults(result);
           setIsCalculating(false);
-          // Update the previous values reference after successful calculation
           previousFormValuesRef.current = { ...data };
-          // Update the last calculated step
           lastCalculatedStepRef.current = currentStep;
         },
         onError: (error) => {
@@ -408,7 +388,6 @@ export default function SimulationPage() {
 
   return (
     <div className="min-h-screen bg-white">
-      {/* Header with logo */}
       <div className="absolute top-8 left-8 z-10">
         <a
           href="https://www.zus.pl/"
@@ -421,7 +400,6 @@ export default function SimulationPage() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 min-h-screen">
-        {/* Left Column - Form (60%) */}
         <div className="bg-white flex items-center justify-center p-12">
           <div className="max-w-2xl w-full space-y-8">
             <StepHeader
@@ -429,7 +407,6 @@ export default function SimulationPage() {
               subtitle="Po zapisaniu danych pokażemy prognozy w czasie rzeczywistym."
             />
 
-            {/* Progress Indicator */}
             <div className="space-y-3">
               <div className="flex items-center justify-between">
                 <span className="text-sm font-medium text-gray-700">
@@ -447,7 +424,6 @@ export default function SimulationPage() {
               </div>
             </div>
 
-            {/* Step Title */}
             <div className="space-y-2">
               <h2 className="text-xl font-bold text-gray-900">
                 {getStepTitle()}
@@ -455,10 +431,8 @@ export default function SimulationPage() {
               <p className="text-sm text-gray-600">{getStepDescription()}</p>
             </div>
 
-            {/* Step Content */}
             <div className="space-y-6">{renderStepContent()}</div>
 
-            {/* Form Actions */}
             <FormActions
               onBack={prevStep}
               onNext={currentStep < totalSteps ? nextStep : undefined}
@@ -472,7 +446,6 @@ export default function SimulationPage() {
                         );
                       }
 
-                      // Calculate final projection and then navigate
                       calculateProjection(values);
                       router.push("/simulation/dashboard");
                     }
@@ -497,7 +470,6 @@ export default function SimulationPage() {
           </div>
         </div>
 
-        {/* Right Column - Results Panel */}
         <div className="relative h-screen">
           <div className="absolute inset-0 p-8 overflow-y-auto">
             {pensionResults ? (
