@@ -1,0 +1,22 @@
+<svg width="60" height="60" viewBox="0 0 60 60" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <filter id="glow">
+      <feGaussianBlur stdDeviation="2" result="coloredBlur"/>
+      <feMerge>
+        <feMergeNode in="coloredBlur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+  
+  <path d="M 30 5 L 50 50 L 30 45 L 10 50 Z" fill="#00993F" stroke="#00cc52" stroke-width="2" filter="url(#glow)"/>
+  
+  <circle cx="30" cy="30" r="6" fill="#4DD599" stroke="#00cc52" stroke-width="1.5"/>
+  
+  <line x1="15" y1="42" x2="20" y2="38" stroke="#00cc52" stroke-width="1.5" stroke-linecap="round"/>
+  <line x1="45" y1="42" x2="40" y2="38" stroke="#00cc52" stroke-width="1.5" stroke-linecap="round"/>
+  
+  <ellipse cx="30" cy="48" rx="8" ry="3" fill="#4DD599" opacity="0.7"/>
+</svg>
+
+
