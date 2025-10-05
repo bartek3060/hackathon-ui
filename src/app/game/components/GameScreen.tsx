@@ -10,10 +10,13 @@ import { PausedOverlay } from "./PausedOverlay";
 import { useGameStore } from "../store";
 
 export function GameScreen() {
-  const { phase, level, start, pause, resume, reset } = useGameStore();
+  const { level, reset } = useGameStore();
 
   useEffect(() => {
+    reset();
+
     const handleKeyDown = (e: KeyboardEvent) => {
+      const { phase, start, pause, resume } = useGameStore.getState();
       switch (e.code) {
         case "Space":
           e.preventDefault();
@@ -22,17 +25,12 @@ export function GameScreen() {
           }
           break;
         case "KeyP":
+        case "Escape":
           e.preventDefault();
           if (phase === "playing") {
             pause();
           } else if (phase === "paused") {
             resume();
-          }
-          break;
-        case "Escape":
-          e.preventDefault();
-          if (phase === "playing") {
-            pause();
           }
           break;
       }
@@ -42,12 +40,8 @@ export function GameScreen() {
 
     return () => {
       window.removeEventListener("keydown", handleKeyDown);
-      
-      if (typeof window !== "undefined") {
-        delete (window as any).gameStore;
-      }
     };
-  }, [phase, start, pause, resume, reset]);
+  }, [reset]);
 
   return (
     <div className="relative w-full h-screen overflow-hidden">

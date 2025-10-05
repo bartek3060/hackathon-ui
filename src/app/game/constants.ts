@@ -1,10 +1,10 @@
 export const GAME_CONFIG = {
   WIDTH: 800,
   HEIGHT: 1200,
-  
+
   TARGET_FPS: 60,
   MAX_DELTA_TIME: 1000 / 30,
-  
+
   PLAYER: {
     SPEED: 500,
     SIZE: 60,
@@ -12,20 +12,20 @@ export const GAME_CONFIG = {
     FIRE_RATE: 0.2,
     INVULNERABLE_TIME: 2,
   },
-  
+
   BULLET: {
     SPEED: 600,
     SIZE: 8,
     MAX_POOL_SIZE: 50,
   },
-  
+
   ENEMY: {
     BASE_SPEED: 150,
     SIZE: 50,
     MAX_ACTIVE: 20,
     POINTS: 50,
   },
-  
+
   PICKUP: {
     SPEED: 120,
     SIZE: 40,
@@ -34,7 +34,7 @@ export const GAME_CONFIG = {
     HEALTH_RESTORE: 1,
     EDU_MULTIPLIER: 1.5,
   },
-  
+
   SPAWN_RATES: [
     { enemyInterval: 2.0, pickupInterval: 4.0, speedMultiplier: 1.0 },
     { enemyInterval: 1.5, pickupInterval: 3.5, speedMultiplier: 1.2 },
@@ -42,7 +42,7 @@ export const GAME_CONFIG = {
     { enemyInterval: 1.0, pickupInterval: 2.5, speedMultiplier: 1.6 },
     { enemyInterval: 0.8, pickupInterval: 2.0, speedMultiplier: 1.8 },
   ],
-  
+
   DIFFICULTY: {
     TIER_DURATION: 20,
     MAX_TIER: 4,
@@ -61,18 +61,18 @@ export const GAME_CONFIG = {
     MAX_MULTIPLIER: 5,
     LEVEL_THRESHOLD: 500,
   },
-  
+
   COLLISION: {
     GRID_COLS: 8,
     GRID_ROWS: 12,
   },
-  
+
   PARTICLES: {
     EXPLOSION_COUNT: 12,
     LIFETIME: 0.5,
     SPEED: 200,
   },
-  
+
   TIPS: [
     "Regularne składki to Twoja tarcza przed inflacją.",
     "Inwestycje w edukację poprawiają długoterminowe wyniki.",
@@ -90,14 +90,14 @@ export const ASSETS = {
   HEALTH: "/game/health.svg",
   EDUCATION: "/game/education.svg",
   PARTICLE: "/game/particle.png",
-  
+
   FALLBACK: {
-    SHIP: 0x00993F,
-    ENEMY: 0xFF4444,
-    COIN: 0xFFD700,
-    HEALTH: 0xFF69B4,
-    EDUCATION: 0x4169E1,
-    PARTICLE: 0xFFFFFF,
+    SHIP: 0x00993f,
+    ENEMY: 0xff4444,
+    COIN: 0xffd700,
+    HEALTH: 0xff69b4,
+    EDUCATION: 0x4169e1,
+    PARTICLE: 0xffffff,
   },
 } as const;
 
@@ -126,4 +126,3 @@ export const CONTROLS = {
     FIRE_COOLDOWN: 0.3,
   },
 } as const;
-
