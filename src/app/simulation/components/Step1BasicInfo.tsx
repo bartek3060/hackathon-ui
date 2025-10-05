@@ -64,8 +64,8 @@ export function Step1BasicInfo({
                   <SelectValue placeholder="Wybierz płeć" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="male">Mężczyzna</SelectItem>
-                  <SelectItem value="female">Kobieta</SelectItem>
+                  <SelectItem value="man">Mężczyzna</SelectItem>
+                  <SelectItem value="woman">Kobieta</SelectItem>
                 </SelectContent>
               </Select>
               {errors.gender && (

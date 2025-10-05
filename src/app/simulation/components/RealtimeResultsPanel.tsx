@@ -502,19 +502,41 @@ export function RealtimeResultsPanel({
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <p className="text-sm font-medium text-gray-600">
-                      Wysokość rzeczywista
+                      Z uwzględnieniem chorobowych
                     </p>
                     <p className="text-2xl font-bold text-gray-900">
-                      {formatCurrency(data.monthlyPension)}
+                      {formatCurrency(data.pensionWithSick)}
                     </p>
                     <p className="text-xs text-gray-500">miesięcznie</p>
                   </div>
                   <div className="space-y-2">
                     <p className="text-sm font-medium text-gray-600">
-                      Wysokość urealniona
+                      Z uwzględnieniem chorobowych (realistycznie)
                     </p>
                     <p className="text-2xl font-bold text-gray-900">
-                      {formatCurrency(data.monthlyPensionReal)}
+                      {formatCurrency(data.pensionWithSickRealistic)}
+                    </p>
+                    <p className="text-xs text-gray-500">
+                      z uwzględnieniem inflacji
+                    </p>
+                  </div>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+                  <div className="space-y-2">
+                    <p className="text-sm font-medium text-gray-600">
+                      Bez uwzględnienia chorobowych
+                    </p>
+                    <p className="text-xl font-bold text-gray-900">
+                      {formatCurrency(data.pensionWithoutSick)}
+                    </p>
+                    <p className="text-xs text-gray-500">miesięcznie</p>
+                  </div>
+                  <div className="space-y-2">
+                    <p className="text-sm font-medium text-gray-600">
+                      Bez uwzględnienia chorobowych (realistycznie)
+                    </p>
+                    <p className="text-xl font-bold text-gray-900">
+                      {formatCurrency(data.pensionWithoutSickRealistic)}
                     </p>
                     <p className="text-xs text-gray-500">
                       z uwzględnieniem inflacji
@@ -559,69 +581,7 @@ export function RealtimeResultsPanel({
                   </div>
                 </div>
               </Card>
-
-              <Card className="bg-white border-gray-200 p-4">
-                <div className="space-y-3">
-                  <div className="flex items-center gap-2">
-                    <div className="w-8 h-8 rounded-lg bg-purple-100 flex items-center justify-center">
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        width="16"
-                        height="16"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth="2"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        className="text-purple-600"
-                      >
-                        <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path>
-                        <circle cx="9" cy="7" r="4"></circle>
-                        <path d="M22 21v-2a4 4 0 0 0-3-3.87"></path>
-                        <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
-                      </svg>
-                    </div>
-                    <h4 className="font-semibold text-gray-900">
-                      Średnia krajowa
-                    </h4>
-                  </div>
-                  <div className="space-y-1">
-                    <p className="text-2xl font-bold text-gray-900">
-                      {formatCurrency(data.averagePensionInRetirementYear)}
-                    </p>
-                    <p className="text-xs text-gray-500">
-                      w roku przejścia na emeryturę
-                    </p>
-                  </div>
-                </div>
-              </Card>
             </div>
-
-            {/* Salary Information */}
-            <Card className="bg-white border-gray-200 p-4">
-              <div className="space-y-4">
-                <h4 className="font-semibold text-gray-900">Wynagrodzenie</h4>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <p className="text-sm font-medium text-gray-600">
-                      Bez uwzględnienia chorobowych
-                    </p>
-                    <p className="text-lg font-semibold text-gray-900">
-                      {formatCurrency(data.salaryWithoutSickLeave)}
-                    </p>
-                  </div>
-                  <div className="space-y-2">
-                    <p className="text-sm font-medium text-gray-600">
-                      Z uwzględnieniem chorobowych
-                    </p>
-                    <p className="text-lg font-semibold text-gray-900">
-                      {formatCurrency(data.salaryWithSickLeave)}
-                    </p>
-                  </div>
-                </div>
-              </div>
-            </Card>
 
             {/* Future Scenarios */}
             <Card className="bg-white border-gray-200 p-4">
@@ -668,7 +628,7 @@ export function RealtimeResultsPanel({
             {data.expectedPension > 0 && (
               <Card
                 className={`border-2 p-4 ${
-                  data.monthlyPension >= data.expectedPension
+                  data.pensionWithSick >= data.expectedPension
                     ? "bg-green-50 border-green-200"
                     : "bg-amber-50 border-amber-200"
                 }`}
@@ -677,7 +637,7 @@ export function RealtimeResultsPanel({
                   <div className="flex items-center gap-2">
                     <div
                       className={`w-8 h-8 rounded-lg flex items-center justify-center ${
-                        data.monthlyPension >= data.expectedPension
+                        data.pensionWithSick >= data.expectedPension
                           ? "bg-green-100"
                           : "bg-amber-100"
                       }`}
@@ -693,12 +653,12 @@ export function RealtimeResultsPanel({
                         strokeLinecap="round"
                         strokeLinejoin="round"
                         className={
-                          data.monthlyPension >= data.expectedPension
+                          data.pensionWithSick >= data.expectedPension
                             ? "text-green-600"
                             : "text-amber-600"
                         }
                       >
-                        {data.monthlyPension >= data.expectedPension ? (
+                        {data.pensionWithSick >= data.expectedPension ? (
                           <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
                         ) : (
                           <path d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z"></path>
@@ -708,12 +668,12 @@ export function RealtimeResultsPanel({
                     </div>
                     <h4
                       className={`font-semibold ${
-                        data.monthlyPension >= data.expectedPension
+                        data.pensionWithSick >= data.expectedPension
                           ? "text-green-900"
                           : "text-amber-900"
                       }`}
                     >
-                      {data.monthlyPension >= data.expectedPension
+                      {data.pensionWithSick >= data.expectedPension
                         ? "Osiągnięto oczekiwane świadczenie"
                         : "Wymagana dłuższa praca"}
                     </h4>
@@ -728,20 +688,30 @@ export function RealtimeResultsPanel({
                     </div>
                     <div className="flex justify-between items-center">
                       <span className="text-sm text-gray-600">
-                        Prognozowane:
+                        Prognozowane (z chorobowymi):
                       </span>
                       <span className="font-semibold">
-                        {formatCurrency(data.monthlyPension)}
+                        {formatCurrency(data.pensionWithSick)}
                       </span>
                     </div>
-                    {data.monthlyPension < data.expectedPension && (
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm text-gray-600">
+                        Prognozowane (bez chorobowych):
+                      </span>
+                      <span className="font-semibold">
+                        {formatCurrency(data.pensionWithoutSick)}
+                      </span>
+                    </div>
+                    {data.pensionWithSick < data.expectedPension && (
                       <div className="flex justify-between items-center pt-2 border-t">
                         <span className="text-sm text-gray-600">
                           Dodatkowe lata pracy:
                         </span>
                         <span className="font-semibold text-amber-700">
-                          {data.yearsToExpectedPension}{" "}
-                          {data.yearsToExpectedPension === 1 ? "rok" : "lat"}
+                          {data.additionalYearsToReachDesiredPension}{" "}
+                          {data.additionalYearsToReachDesiredPension === 1
+                            ? "rok"
+                            : "lat"}
                         </span>
                       </div>
                     )}

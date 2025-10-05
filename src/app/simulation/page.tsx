@@ -47,14 +47,14 @@ const SALARY_GROWTH_DATA: SalaryIndexingData[] = [
 
 // Retirement ages in Poland
 const RETIREMENT_AGE = {
-  male: 65,
-  female: 60,
+  man: 65,
+  woman: 60,
 };
 
 // Average sick leave days per year (simplified data)
 const SICK_LEAVE_DATA = {
-  male: 12, // days per year
-  female: 18, // days per year
+  man: 12, // days per year
+  woman: 18, // days per year
 };
 
 export default function SimulationPage() {
@@ -93,6 +93,10 @@ export default function SimulationPage() {
       "workStartYear",
       "workEndYear",
       "includeSickLeave",
+      "includeZusFields",
+      "zusAccountFunds",
+      "zusSubAccountFunds",
+      "postalCode",
     ];
 
     const hasChanged = relevantFields.some((field) => {
@@ -253,7 +257,7 @@ export default function SimulationPage() {
       case 4:
         return true; // Review step
       case 5:
-        return true; // Optional postal code step
+        return true; // Optional postal code step - always valid
       default:
         return false;
     }
@@ -275,24 +279,36 @@ export default function SimulationPage() {
     try {
       setIsCalculating(true);
 
+      // Get session ID
+      const sessionId = getSessionId();
+
       // Convert to DTO format for API call
       const currentYear = new Date().getFullYear();
-      const birthDate = new Date(currentYear - data.age, 0, 1);
-      const workStartDate = new Date(data.workStartYear, 0, 1);
-      const workEndDate = new Date(data.workEndYear, 0, 1);
+      const birthDate = new Date(currentYear - data.age, 0, 1)
+        .toISOString()
+        .split("T")[0];
+      const workStartDate = new Date(data.workStartYear, 0, 1)
+        .toISOString()
+        .split("T")[0];
+      const workEndDate = new Date(data.workEndYear, 0, 1)
+        .toISOString()
+        .split("T")[0];
 
       const dtoPayload = {
-        age: data.age,
-        gender: data.gender || "male",
+        sessionId,
+        gender: data.gender || "man",
         birthDate,
         grossSalary: data.grossSalary,
         workStartYear: workStartDate,
         plannedWorkEndYear: workEndDate,
-        ...(data.includeZusFields && {
-          amountOfMoneyInZusAccount: data.zusAccountFunds || 0,
-          amountOfMoneyInZusSubAccount: data.zusSubAccountFunds || 0,
-        }),
+        amountOfMoneyInZusAccount: data.includeZusFields
+          ? data.zusAccountFunds || 0
+          : 0,
+        amountOfMoneyInZusSubAccount: data.includeZusFields
+          ? data.zusSubAccountFunds || 0
+          : 0,
         includeSickLeave: data.includeSickLeave || false,
+        postalCode: data.postalCode || "",
       };
 
       // Use the mutation which now handles fallback to mock data
@@ -455,7 +471,10 @@ export default function SimulationPage() {
                           "Dziękujemy! Twoje dane pomogą nam lepiej analizować sytuację emerytalną w Polsce."
                         );
                       }
+
+                      // Calculate final projection and then navigate
                       calculateProjection(values);
+                      router.push("/simulation/dashboard");
                     }
                   : undefined
               }
@@ -469,7 +488,9 @@ export default function SimulationPage() {
               showSubmit={currentStep === totalSteps}
               showSkip={currentStep === totalSteps}
               submitLabel={
-                currentStep === totalSteps ? "Zapisz i zakończ" : undefined
+                currentStep === totalSteps
+                  ? "Zapisz i przejdź do dashboardu"
+                  : undefined
               }
               isLoading={isPending}
             />

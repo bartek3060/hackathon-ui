@@ -1,24 +1,20 @@
 export interface CalculatedPensionDto {
-  // Main pension amounts
-  monthlyPension: number;
-  monthlyPensionReal: number; // Wysokość urealniona
+  // Pension amounts with and without sick leave
+  pensionWithSick: number;
+  pensionWithSickRealistic: number;
+  pensionWithoutSick: number;
+  pensionWithoutSickRealistic: number;
 
-  // Comparison data
-  averagePensionInRetirementYear: number;
+  // Replacement rate
   replacementRate: number; // Stopa zastąpienia
-
-  // Salary information
-  salaryWithoutSickLeave: number;
-  salaryWithSickLeave: number;
 
   // Future scenarios
   pensionAfter1Year: number;
   pensionAfter2Years: number;
   pensionAfter5Years: number;
 
-  // Expected vs actual comparison
+  // Expected pension
   expectedPension: number;
-  yearsToExpectedPension: number; // Ile lat dłużej musi pracować
 
   // Additional metrics
   totalWorkYears: number;

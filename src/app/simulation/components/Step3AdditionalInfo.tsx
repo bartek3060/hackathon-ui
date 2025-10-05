@@ -13,8 +13,8 @@ interface Step3AdditionalInfoProps {
 }
 
 const SICK_LEAVE_DATA = {
-  male: 12, // days per year
-  female: 18, // days per year
+  man: 12, // days per year
+  woman: 18, // days per year
 };
 
 export function Step3AdditionalInfo({
@@ -23,8 +23,8 @@ export function Step3AdditionalInfo({
   formatCurrency,
 }: Step3AdditionalInfoProps) {
   const watchedGender = useWatch({ control, name: "gender" }) as
-    | "male"
-    | "female"
+    | "man"
+    | "woman"
     | undefined;
   const includeZusFields = useWatch({
     control,
@@ -165,7 +165,8 @@ export function Step3AdditionalInfo({
                 </Label>
               </div>
               <p className="text-sm text-gray-500 ml-6 mt-1">
-                Symulacja uwzględni średnią długość zwolnień w okresie aktywności zawodowej
+                Symulacja uwzględni średnią długość zwolnień w okresie
+                aktywności zawodowej
               </p>
             </div>
           )}
@@ -199,14 +200,14 @@ export function Step3AdditionalInfo({
                 <div className="bg-white/60 rounded-lg p-3 border border-purple-200/50">
                   <p className="text-xs text-purple-700 mb-1">Mężczyźni</p>
                   <p className="text-lg font-bold text-purple-900">
-                    {SICK_LEAVE_DATA.male} dni
+                    {SICK_LEAVE_DATA.man} dni
                   </p>
                   <p className="text-xs text-purple-600">rocznie</p>
                 </div>
                 <div className="bg-white/60 rounded-lg p-3 border border-purple-200/50">
                   <p className="text-xs text-purple-700 mb-1">Kobiety</p>
                   <p className="text-lg font-bold text-purple-900">
-                    {SICK_LEAVE_DATA.female} dni
+                    {SICK_LEAVE_DATA.woman} dni
                   </p>
                   <p className="text-xs text-purple-600">rocznie</p>
                 </div>

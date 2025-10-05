@@ -8,7 +8,7 @@ export const simulationFormSchema = z
       .min(18, "Wiek musi wynosić co najmniej 18 lat")
       .max(100, "Wiek nie może przekraczać 100 lat"),
 
-    gender: z.enum(["male", "female"], {
+    gender: z.enum(["man", "woman"], {
       message: "Płeć jest wymagana",
     }),
 
@@ -73,7 +73,7 @@ export type SimulationFormData = z.infer<typeof simulationFormSchema>;
 // Also export a type where optional fields are guaranteed to have values
 export type SimulationFormDataWithDefaults = {
   age: number;
-  gender: "male" | "female";
+  gender: "man" | "woman";
   grossSalary: number;
   workStartYear: number;
   workEndYear: number;

@@ -8,12 +8,12 @@ import { SimulationFormInterface } from "../simulation-form.schema";
 interface Step2WorkPeriodProps {
   control: Control<SimulationFormInterface>;
   errors: FieldErrors<SimulationFormInterface>;
-  watchedGender: "male" | "female" | undefined;
+  watchedGender: "man" | "woman" | undefined;
 }
 
 const RETIREMENT_AGE = {
-  male: 65,
-  female: 60,
+  man: 65,
+  woman: 60,
 };
 
 export function Step2WorkPeriod({
@@ -77,7 +77,9 @@ export function Step2WorkPeriod({
               )}
               {watchedGender && (
                 <p className="text-sm text-gray-500 mt-2">
-                  Sugerowany wiek emerytalny: {RETIREMENT_AGE[watchedGender as keyof typeof RETIREMENT_AGE]} lat
+                  Sugerowany wiek emerytalny:{" "}
+                  {RETIREMENT_AGE[watchedGender as keyof typeof RETIREMENT_AGE]}{" "}
+                  lat
                 </p>
               )}
             </div>
@@ -108,7 +110,8 @@ export function Step2WorkPeriod({
               Uwaga dotycząca dat
             </p>
             <p className="text-sm text-blue-700">
-              W kalkulacjach przyjmujemy, że rozpoczęcie i zakończenie pracy następuje w styczniu danego roku.
+              W kalkulacjach przyjmujemy, że rozpoczęcie i zakończenie pracy
+              następuje w styczniu danego roku.
             </p>
           </div>
         </div>
