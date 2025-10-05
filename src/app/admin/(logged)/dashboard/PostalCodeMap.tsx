@@ -3,15 +3,7 @@
 import { useEffect, useState } from "react";
 import dynamic from "next/dynamic";
 import { MapPin, Loader2 } from "lucide-react";
-
-const Map = dynamic(() => import("./MapComponent"), {
-  ssr: false,
-  loading: () => (
-    <div className="flex items-center justify-center h-[600px] bg-gray-100 rounded-lg">
-      <Loader2 className="h-8 w-8 animate-spin text-gray-400" />
-    </div>
-  ),
-});
+import type { ComponentType } from "react";
 
 interface PostalCodeData {
   postalCode: string;
@@ -19,6 +11,18 @@ interface PostalCodeData {
   lat?: number;
   lng?: number;
 }
+
+const Map = dynamic<{ postalCodeData: PostalCodeData[] }>(
+  () => import("./MapComponent") as Promise<{ default: ComponentType<{ postalCodeData: PostalCodeData[] }> }>,
+  {
+    ssr: false,
+    loading: () => (
+      <div className="flex items-center justify-center h-[600px] bg-gray-100 rounded-lg">
+        <Loader2 className="h-8 w-8 animate-spin text-gray-400" />
+      </div>
+    ),
+  }
+);
 
 interface PostalCodeMapProps {
   data: Array<{ postalCode: string }>;

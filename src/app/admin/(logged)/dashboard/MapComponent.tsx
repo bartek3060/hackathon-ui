@@ -60,8 +60,8 @@ export default function MapComponent({ postalCodeData }: MapComponentProps) {
           </div>
         `);
 
-        circle.on("mouseover", function () {
-          this.openPopup();
+        circle.on("mouseover", () => {
+          circle.openPopup();
         });
       }
     });
