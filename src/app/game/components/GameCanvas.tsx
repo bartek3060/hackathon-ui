@@ -51,17 +51,6 @@ interface Particle {
 
 export function GameCanvas() {
   const phase = useGameStore((state) => state.phase);
-  const updateElapsed = useGameStore((state) => state.updateElapsed);
-  const incrementShots = useGameStore((state) => state.incrementShots);
-  const addScore = useGameStore((state) => state.addScore);
-  const loseLife = useGameStore((state) => state.loseLife);
-  const gainLife = useGameStore((state) => state.gainLife);
-  const updateMultiplier = useGameStore((state) => state.updateMultiplier);
-  const incrementHits = useGameStore((state) => state.incrementHits);
-  const incrementEnemiesDestroyed = useGameStore(
-    (state) => state.incrementEnemiesDestroyed
-  );
-  const incrementPickups = useGameStore((state) => state.incrementPickups);
 
   const [isAppReady, setIsAppReady] = useState(false);
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -92,16 +81,17 @@ export function GameCanvas() {
   const loadedTexturesRef = useRef<string[]>([]);
   const isInitializingRef = useRef(false);
   const hasInitializedRef = useRef(false);
+  const previousPhaseRef = useRef<string>(phase);
 
   useEffect(() => {
-    if (phase !== "playing" || hasInitializedRef.current) return;
+    if (phase !== "playing") return;
+    if (hasInitializedRef.current) return;
     if (!canvasRef.current || app.current || isInitializingRef.current) return;
 
     hasInitializedRef.current = true;
-
-    let isMounted = true;
     isInitializingRef.current = true;
     
+    let isMounted = true;
     const pixiApp = new PIXI.Application();
     app.current = pixiApp;
 
@@ -342,12 +332,19 @@ export function GameCanvas() {
       pixiApp.ticker.add((ticker) => {
         updateGame(ticker.deltaMS / 1000);
       });
+      
+      pixiApp.ticker.stop();
 
       setIsAppReady(true);
     })();
 
     return () => {
       isMounted = false;
+    };
+  }, [phase]);
+
+  useEffect(() => {
+    return () => {
       setIsAppReady(false);
       isInitializingRef.current = false;
       hasInitializedRef.current = false;
@@ -376,7 +373,7 @@ export function GameCanvas() {
       enemyPoolRef.current = [];
       pickupPoolRef.current = [];
     };
-  }, [phase]);
+  }, []);
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -400,6 +397,9 @@ export function GameCanvas() {
   useEffect(() => {
     if (!isAppReady || !containerRef.current || !app.current) return;
 
+    const previousPhase = previousPhaseRef.current;
+    previousPhaseRef.current = phase;
+
     textElementsRef.current.forEach((text) => text.destroy());
     textElementsRef.current = [];
 
@@ -407,42 +407,56 @@ export function GameCanvas() {
       shipSpriteRef.current.visible = phase === "playing" || phase === "paused";
     }
 
-    if (phase === "playing" && app.current && shipSpriteRef.current) {
-      playerPosRef.current = {
-        x: app.current.screen.width / 2,
-        y: app.current.screen.height - 150,
-      };
-      elapsedTimeRef.current = 0;
-      lastFireTimeRef.current = 0;
-      lastEnemySpawnRef.current = 0;
-      lastPickupSpawnRef.current = 0;
-      invulnerableUntilRef.current = 0;
-
-      for (const bullet of bulletPoolRef.current) {
-        bullet.active = false;
-        bullet.sprite.visible = false;
+    if (phase === "playing") {
+      if (app.current.ticker) {
+        app.current.ticker.start();
       }
 
-      for (const enemy of enemyPoolRef.current) {
-        enemy.active = false;
-        enemy.sprite.visible = false;
+      const isNewGame = previousPhase === "menu" || previousPhase === "gameover";
+      
+      if (isNewGame && app.current && shipSpriteRef.current) {
+        playerPosRef.current = {
+          x: app.current.screen.width / 2,
+          y: app.current.screen.height - 150,
+        };
+        elapsedTimeRef.current = 0;
+        lastFireTimeRef.current = 0;
+        lastEnemySpawnRef.current = 0;
+        lastPickupSpawnRef.current = 0;
+        invulnerableUntilRef.current = 0;
+
+        for (const bullet of bulletPoolRef.current) {
+          bullet.active = false;
+          bullet.sprite.visible = false;
+        }
+
+        for (const enemy of enemyPoolRef.current) {
+          enemy.active = false;
+          enemy.sprite.visible = false;
+        }
+
+        for (const pickup of pickupPoolRef.current) {
+          pickup.active = false;
+          pickup.sprite.visible = false;
+        }
+
+        for (const particle of particlePoolRef.current) {
+          particle.active = false;
+          particle.sprite.visible = false;
+        }
+
+        shipSpriteRef.current.x = playerPosRef.current.x;
+        shipSpriteRef.current.y = playerPosRef.current.y;
       }
-
-      for (const pickup of pickupPoolRef.current) {
-        pickup.active = false;
-        pickup.sprite.visible = false;
+    } else if (phase === "paused") {
+      if (app.current?.ticker) {
+        app.current.ticker.stop();
       }
-
-      for (const particle of particlePoolRef.current) {
-        particle.active = false;
-        particle.sprite.visible = false;
+    } else if (phase === "menu" || phase === "gameover") {
+      if (app.current?.ticker) {
+        app.current.ticker.stop();
       }
-
-      shipSpriteRef.current.x = playerPosRef.current.x;
-      shipSpriteRef.current.y = playerPosRef.current.y;
-    }
-
-    if (phase !== "playing") {
+      
       for (const bullet of bulletPoolRef.current) {
         bullet.active = false;
         bullet.sprite.visible = false;
@@ -476,7 +490,7 @@ export function GameCanvas() {
     bullet.sprite.x = bullet.x;
     bullet.sprite.y = bullet.y;
 
-    incrementShots();
+    useGameStore.getState().incrementShots();
     audioManager.play("shoot");
   };
 
@@ -702,9 +716,9 @@ export function GameCanvas() {
           const points = Math.floor(
             GAME_CONFIG.ENEMY.POINTS * currentMultiplier
           );
-          addScore(points);
-          incrementHits();
-          incrementEnemiesDestroyed();
+          useGameStore.getState().addScore(points);
+          useGameStore.getState().incrementHits();
+          useGameStore.getState().incrementEnemiesDestroyed();
           audioManager.play("hit");
 
           createExplosion(enemy.x, enemy.y, ASSETS.FALLBACK.ENEMY);
@@ -728,7 +742,7 @@ export function GameCanvas() {
       ) {
         pickup.active = false;
         pickup.sprite.visible = false;
-        incrementPickups();
+        useGameStore.getState().incrementPickups();
         audioManager.play("pickup");
 
         switch (pickup.type) {
@@ -736,12 +750,12 @@ export function GameCanvas() {
             const coinPoints = Math.floor(
               GAME_CONFIG.PICKUP.COIN_POINTS * currentMultiplier
             );
-            addScore(coinPoints);
+            useGameStore.getState().addScore(coinPoints);
             createExplosion(pickup.x, pickup.y, ASSETS.FALLBACK.COIN);
             break;
           case "health":
             if (currentLives < 5) {
-              gainLife();
+              useGameStore.getState().gainLife();
             }
             createExplosion(pickup.x, pickup.y, ASSETS.FALLBACK.HEALTH);
             break;
@@ -750,7 +764,7 @@ export function GameCanvas() {
               currentMultiplier + GAME_CONFIG.PICKUP.EDU_MULTIPLIER,
               GAME_CONFIG.SCORE.MAX_MULTIPLIER
             );
-            updateMultiplier(newMultiplier);
+            useGameStore.getState().updateMultiplier(newMultiplier);
             createExplosion(pickup.x, pickup.y, ASSETS.FALLBACK.EDUCATION);
             break;
         }
@@ -777,7 +791,7 @@ export function GameCanvas() {
           enemy.active = false;
           enemy.sprite.visible = false;
 
-          loseLife();
+          useGameStore.getState().loseLife();
           createExplosion(enemy.x, enemy.y, 0xff0000);
 
           invulnerableUntilRef.current =
@@ -791,13 +805,12 @@ export function GameCanvas() {
 
   const updateGame = (deltaTime: number) => {
     const currentPhase = useGameStore.getState().phase;
-
     if (currentPhase !== "playing" || !shipSpriteRef.current) return;
 
     const dt = Math.min(deltaTime, GAME_CONFIG.MAX_DELTA_TIME / 1000);
 
     elapsedTimeRef.current += dt;
-    updateElapsed(elapsedTimeRef.current);
+    useGameStore.getState().updateElapsed(elapsedTimeRef.current);
 
     let dx = 0;
 

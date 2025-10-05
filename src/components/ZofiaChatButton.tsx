@@ -126,7 +126,7 @@ export function ZofiaChatButton() {
         onClick={() => setIsOpen(!isOpen)}
         whileHover={{ scale: 1.1 }}
         whileTap={{ scale: 0.95 }}
-        className="fixed bottom-6 right-6 h-16 w-16 rounded-full shadow-2xl hover:shadow-[0_20px_50px_rgba(0,153,63,0.3)] transition-shadow duration-300 bg-gradient-to-br from-[#00993F] to-[#007A32] text-white z-50 flex items-center justify-center"
+        className="fixed bottom-2 right-2 h-16 w-16 rounded-full shadow-2xl hover:shadow-[0_20px_50px_rgba(0,153,63,0.3)] transition-shadow duration-300 bg-gradient-to-br from-[#00993F] to-[#007A32] text-white z-50 flex items-center justify-center"
       >
         <motion.div
           animate={{ rotate: isOpen ? 45 : 0 }}
