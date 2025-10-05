@@ -9,10 +9,6 @@ import { audioManager } from "../audio";
 const LOGICAL_WIDTH = GAME_CONFIG.WIDTH;
 const LOGICAL_HEIGHT = GAME_CONFIG.HEIGHT;
 
-interface GameCanvasProps {
-  shipTextureSrc?: string;
-}
-
 interface PooledBullet {
   sprite: PIXI.Graphics;
   active: boolean;
@@ -53,7 +49,7 @@ interface Particle {
   maxLife: number;
 }
 
-export function GameCanvas({ shipTextureSrc = ASSETS.SHIP }: GameCanvasProps) {
+export function GameCanvas() {
   const phase = useGameStore((state) => state.phase);
   const updateElapsed = useGameStore((state) => state.updateElapsed);
   const incrementShots = useGameStore((state) => state.incrementShots);
@@ -69,7 +65,6 @@ export function GameCanvas({ shipTextureSrc = ASSETS.SHIP }: GameCanvasProps) {
 
   const [isAppReady, setIsAppReady] = useState(false);
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const appRef = useRef<PIXI.Application | null>(null);
   const containerRef = useRef<PIXI.Container | null>(null);
   const bulletsContainerRef = useRef<PIXI.Container | null>(null);
   const enemiesContainerRef = useRef<PIXI.Container | null>(null);
@@ -93,15 +88,30 @@ export function GameCanvas({ shipTextureSrc = ASSETS.SHIP }: GameCanvasProps) {
   const lastPickupSpawnRef = useRef(0);
 
   const particlePoolRef = useRef<Particle[]>([]);
+  const app = useRef<PIXI.Application | null>(null);
+  const loadedTexturesRef = useRef<string[]>([]);
+  const isInitializingRef = useRef(false);
+  const hasInitializedRef = useRef(false);
 
   useEffect(() => {
-    if (!canvasRef.current) return;
+    if (phase !== "playing" || hasInitializedRef.current) return;
+    if (!canvasRef.current || app.current || isInitializingRef.current) return;
 
-    const app = new PIXI.Application();
-    appRef.current = app;
+    hasInitializedRef.current = true;
+
+    let isMounted = true;
+    isInitializingRef.current = true;
+    
+    const pixiApp = new PIXI.Application();
+    app.current = pixiApp;
 
     (async () => {
-      await app.init({
+      if (!isMounted) {
+        isInitializingRef.current = false;
+        return;
+      }
+
+      await pixiApp.init({
         canvas: canvasRef.current!,
         width: window.innerWidth,
         height: window.innerHeight,
@@ -112,9 +122,15 @@ export function GameCanvas({ shipTextureSrc = ASSETS.SHIP }: GameCanvasProps) {
         resizeTo: window,
       });
 
+      if (!isMounted) {
+        pixiApp.destroy(true);
+        isInitializingRef.current = false;
+        return;
+      }
+
       const container = new PIXI.Container();
       containerRef.current = container;
-      app.stage.addChild(container);
+      pixiApp.stage.addChild(container);
 
       const bulletsContainer = new PIXI.Container();
       bulletsContainerRef.current = bulletsContainer;
@@ -146,12 +162,18 @@ export function GameCanvas({ shipTextureSrc = ASSETS.SHIP }: GameCanvasProps) {
       let enemyTexture: PIXI.Texture;
       try {
         enemyTexture = await PIXI.Assets.load(ASSETS.ENEMY);
+        if (!isMounted) {
+          pixiApp.destroy(true);
+          isInitializingRef.current = false;
+          return;
+        }
+        loadedTexturesRef.current.push(ASSETS.ENEMY);
       } catch (error) {
         console.warn("Failed to load enemy texture, using fallback", error);
         const graphics = new PIXI.Graphics();
         graphics.circle(0, 0, GAME_CONFIG.ENEMY.SIZE / 2);
         graphics.fill(ASSETS.FALLBACK.ENEMY);
-        enemyTexture = app.renderer.generateTexture(graphics);
+        enemyTexture = pixiApp.renderer.generateTexture(graphics);
       }
 
       for (let i = 0; i < enemyPoolSize; i++) {
@@ -183,32 +205,50 @@ export function GameCanvas({ shipTextureSrc = ASSETS.SHIP }: GameCanvasProps) {
 
       try {
         coinTexture = await PIXI.Assets.load(ASSETS.COIN);
+        if (!isMounted) {
+          pixiApp.destroy(true);
+          isInitializingRef.current = false;
+          return;
+        }
+        loadedTexturesRef.current.push(ASSETS.COIN);
       } catch (error) {
         console.warn("Failed to load coin texture, using fallback", error);
         const graphics = new PIXI.Graphics();
         graphics.circle(0, 0, GAME_CONFIG.PICKUP.SIZE / 2);
         graphics.fill(ASSETS.FALLBACK.COIN);
-        coinTexture = app.renderer.generateTexture(graphics);
+        coinTexture = pixiApp.renderer.generateTexture(graphics);
       }
 
       try {
         healthTexture = await PIXI.Assets.load(ASSETS.HEALTH);
+        if (!isMounted) {
+          pixiApp.destroy(true);
+          isInitializingRef.current = false;
+          return;
+        }
+        loadedTexturesRef.current.push(ASSETS.HEALTH);
       } catch (error) {
         console.warn("Failed to load health texture, using fallback", error);
         const graphics = new PIXI.Graphics();
         graphics.circle(0, 0, GAME_CONFIG.PICKUP.SIZE / 2);
         graphics.fill(ASSETS.FALLBACK.HEALTH);
-        healthTexture = app.renderer.generateTexture(graphics);
+        healthTexture = pixiApp.renderer.generateTexture(graphics);
       }
 
       try {
         educationTexture = await PIXI.Assets.load(ASSETS.EDUCATION);
+        if (!isMounted) {
+          pixiApp.destroy(true);
+          isInitializingRef.current = false;
+          return;
+        }
+        loadedTexturesRef.current.push(ASSETS.EDUCATION);
       } catch (error) {
         console.warn("Failed to load education texture, using fallback", error);
         const graphics = new PIXI.Graphics();
         graphics.circle(0, 0, GAME_CONFIG.PICKUP.SIZE / 2);
         graphics.fill(ASSETS.FALLBACK.EDUCATION);
-        educationTexture = app.renderer.generateTexture(graphics);
+        educationTexture = pixiApp.renderer.generateTexture(graphics);
       }
 
       const pickupPoolSize = GAME_CONFIG.PICKUP.MAX_ACTIVE;
@@ -262,14 +302,20 @@ export function GameCanvas({ shipTextureSrc = ASSETS.SHIP }: GameCanvasProps) {
       }
 
       try {
-        const texture = await PIXI.Assets.load(shipTextureSrc);
+        const texture = await PIXI.Assets.load(ASSETS.SHIP);
+        if (!isMounted) {
+          pixiApp.destroy(true);
+          isInitializingRef.current = false;
+          return;
+        }
+        loadedTexturesRef.current.push(ASSETS.SHIP);
         const shipSprite = new PIXI.Sprite(texture);
         shipSprite.anchor.set(0.5);
         shipSprite.width = GAME_CONFIG.PLAYER.SIZE;
         shipSprite.height = GAME_CONFIG.PLAYER.SIZE;
         playerPosRef.current = {
-          x: app.screen.width / 2,
-          y: app.screen.height - 150,
+          x: pixiApp.screen.width / 2,
+          y: pixiApp.screen.height - 150,
         };
         shipSprite.x = playerPosRef.current.x;
         shipSprite.y = playerPosRef.current.y;
@@ -280,12 +326,12 @@ export function GameCanvas({ shipTextureSrc = ASSETS.SHIP }: GameCanvasProps) {
         const graphics = new PIXI.Graphics();
         graphics.rect(-30, -30, 60, 60);
         graphics.fill(ASSETS.FALLBACK.SHIP);
-        const texture = app.renderer.generateTexture(graphics);
+        const texture = pixiApp.renderer.generateTexture(graphics);
         const shipSprite = new PIXI.Sprite(texture);
         shipSprite.anchor.set(0.5);
         playerPosRef.current = {
-          x: app.screen.width / 2,
-          y: app.screen.height - 150,
+          x: pixiApp.screen.width / 2,
+          y: pixiApp.screen.height - 150,
         };
         shipSprite.x = playerPosRef.current.x;
         shipSprite.y = playerPosRef.current.y;
@@ -293,7 +339,7 @@ export function GameCanvas({ shipTextureSrc = ASSETS.SHIP }: GameCanvasProps) {
         container.addChild(shipSprite);
       }
 
-      app.ticker.add((ticker) => {
+      pixiApp.ticker.add((ticker) => {
         updateGame(ticker.deltaMS / 1000);
       });
 
@@ -301,19 +347,28 @@ export function GameCanvas({ shipTextureSrc = ASSETS.SHIP }: GameCanvasProps) {
     })();
 
     return () => {
+      isMounted = false;
       setIsAppReady(false);
-      if (app) {
+      isInitializingRef.current = false;
+      hasInitializedRef.current = false;
+      
+      for (const texturePath of loadedTexturesRef.current) {
         try {
-          app.destroy(true, {
-            children: true,
-            texture: true,
-            textureSource: true,
-          });
+          PIXI.Assets.unload(texturePath);
+        } catch (error) {
+          console.warn(`Error unloading texture ${texturePath}:`, error);
+        }
+      }
+      loadedTexturesRef.current = [];
+      
+      if (app.current) {
+        try {
+          app.current.destroy(true, { children: true });
         } catch (error) {
           console.warn("Error destroying PIXI app:", error);
         }
       }
-      appRef.current = null;
+      app.current = null;
       containerRef.current = null;
       shipSpriteRef.current = null;
       textElementsRef.current = [];
@@ -321,7 +376,7 @@ export function GameCanvas({ shipTextureSrc = ASSETS.SHIP }: GameCanvasProps) {
       enemyPoolRef.current = [];
       pickupPoolRef.current = [];
     };
-  }, [shipTextureSrc]);
+  }, [phase]);
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -343,7 +398,7 @@ export function GameCanvas({ shipTextureSrc = ASSETS.SHIP }: GameCanvasProps) {
   }, []);
 
   useEffect(() => {
-    if (!isAppReady || !containerRef.current || !appRef.current) return;
+    if (!isAppReady || !containerRef.current || !app.current) return;
 
     textElementsRef.current.forEach((text) => text.destroy());
     textElementsRef.current = [];
@@ -352,10 +407,10 @@ export function GameCanvas({ shipTextureSrc = ASSETS.SHIP }: GameCanvasProps) {
       shipSpriteRef.current.visible = phase === "playing" || phase === "paused";
     }
 
-    if (phase === "playing" && appRef.current && shipSpriteRef.current) {
+    if (phase === "playing" && app.current && shipSpriteRef.current) {
       playerPosRef.current = {
-        x: appRef.current.screen.width / 2,
-        y: appRef.current.screen.height - 150,
+        x: app.current.screen.width / 2,
+        y: app.current.screen.height - 150,
       };
       elapsedTimeRef.current = 0;
       lastFireTimeRef.current = 0;
@@ -450,7 +505,7 @@ export function GameCanvas({ shipTextureSrc = ASSETS.SHIP }: GameCanvasProps) {
   };
 
   const spawnEnemy = () => {
-    if (!appRef.current) return;
+    if (!app.current) return;
 
     const activeCount = enemyPoolRef.current.filter((e) => e.active).length;
     if (activeCount >= GAME_CONFIG.ENEMY.MAX_ACTIVE) return;
@@ -463,7 +518,7 @@ export function GameCanvas({ shipTextureSrc = ASSETS.SHIP }: GameCanvasProps) {
 
     const padding = GAME_CONFIG.ENEMY.SIZE;
     enemy.x =
-      padding + Math.random() * (appRef.current.screen.width - padding * 2);
+      padding + Math.random() * (app.current.screen.width - padding * 2);
     enemy.y = -GAME_CONFIG.ENEMY.SIZE;
 
     enemy.vx = (Math.random() - 0.5) * 50;
@@ -476,7 +531,7 @@ export function GameCanvas({ shipTextureSrc = ASSETS.SHIP }: GameCanvasProps) {
   };
 
   const updateEnemies = (dt: number) => {
-    if (!appRef.current) return;
+    if (!app.current) return;
 
     for (const enemy of enemyPoolRef.current) {
       if (!enemy.active) continue;
@@ -485,9 +540,9 @@ export function GameCanvas({ shipTextureSrc = ASSETS.SHIP }: GameCanvasProps) {
       enemy.y += enemy.vy * dt;
 
       if (
-        enemy.y > appRef.current.screen.height + 50 ||
+        enemy.y > app.current.screen.height + 50 ||
         enemy.x < -50 ||
-        enemy.x > appRef.current.screen.width + 50
+        enemy.x > app.current.screen.width + 50
       ) {
         enemy.active = false;
         enemy.sprite.visible = false;
@@ -499,7 +554,7 @@ export function GameCanvas({ shipTextureSrc = ASSETS.SHIP }: GameCanvasProps) {
   };
 
   const spawnPickup = () => {
-    if (!appRef.current) return;
+    if (!app.current) return;
 
     const activeCount = pickupPoolRef.current.filter((p) => p.active).length;
     if (activeCount >= GAME_CONFIG.PICKUP.MAX_ACTIVE) return;
@@ -524,7 +579,7 @@ export function GameCanvas({ shipTextureSrc = ASSETS.SHIP }: GameCanvasProps) {
 
     const padding = GAME_CONFIG.PICKUP.SIZE;
     pickup.x =
-      padding + Math.random() * (appRef.current.screen.width - padding * 2);
+      padding + Math.random() * (app.current.screen.width - padding * 2);
     pickup.y = -GAME_CONFIG.PICKUP.SIZE;
     pickup.vy = GAME_CONFIG.PICKUP.SPEED;
 
@@ -535,14 +590,14 @@ export function GameCanvas({ shipTextureSrc = ASSETS.SHIP }: GameCanvasProps) {
   };
 
   const updatePickups = (dt: number) => {
-    if (!appRef.current) return;
+    if (!app.current) return;
 
     for (const pickup of pickupPoolRef.current) {
       if (!pickup.active) continue;
 
       pickup.y += pickup.vy * dt;
 
-      if (pickup.y > appRef.current.screen.height + 50) {
+        if (pickup.y > app.current.screen.height + 50) {
         pickup.active = false;
         pickup.sprite.visible = false;
       } else {
@@ -764,10 +819,10 @@ export function GameCanvas({ shipTextureSrc = ASSETS.SHIP }: GameCanvasProps) {
 
     const edgePadding = 20;
 
-    if (appRef.current) {
+    if (app.current) {
       playerPosRef.current.x = Math.max(
         edgePadding,
-        Math.min(appRef.current.screen.width - edgePadding, newX)
+        Math.min(app.current.screen.width - edgePadding, newX)
       );
     }
 

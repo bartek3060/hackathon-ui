@@ -3,8 +3,8 @@
 import "./globals.css";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "sonner";
-import { PageTransitionWrapper } from "@/components/PageTransitionWrapper";
 import { ZofiaChatButton } from "@/components/ZofiaChatButton";
+import { usePathname } from "next/navigation";
 
 export default function RootLayout({
   children,
@@ -12,16 +12,16 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   const queryClient = new QueryClient();
+  const pathname = usePathname();
+  const isGameRoute = pathname?.startsWith("/game");
 
   return (
     <html lang="pl">
       <QueryClientProvider client={queryClient}>
         <body>
-          <PageTransitionWrapper>
-            {children}
-          </PageTransitionWrapper>
+          {children}
           <Toaster position="top-right" richColors />
-          <ZofiaChatButton />
+          {!isGameRoute && <ZofiaChatButton />}
         </body>
       </QueryClientProvider>
     </html>

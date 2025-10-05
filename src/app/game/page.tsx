@@ -1,9 +1,13 @@
 "use client";
+import dynamic from 'next/dynamic'
 
-import { GameScreen } from "./components/GameScreen";
+const DynamicComponentWithNoSSR = dynamic(
+  () => import('./components/GameScreen').then((mod) => mod.GameScreen),
+  { ssr: false }
+)
 
-export default function GamePage() {
-  return <GameScreen />;
+export default function Game() {
+  return <DynamicComponentWithNoSSR />;
 }
 
 
