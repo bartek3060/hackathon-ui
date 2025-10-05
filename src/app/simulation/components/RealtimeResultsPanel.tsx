@@ -500,26 +500,30 @@ export function RealtimeResultsPanel({
                   Wysokość świadczenia
                 </h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <p className="text-sm font-medium text-gray-600">
-                      Z uwzględnieniem chorobowych
-                    </p>
-                    <p className="text-2xl font-bold text-gray-900">
-                      {formatCurrency(data.pensionWithSick)}
-                    </p>
-                    <p className="text-xs text-gray-500">miesięcznie</p>
-                  </div>
-                  <div className="space-y-2">
-                    <p className="text-sm font-medium text-gray-600">
-                      Z uwzględnieniem chorobowych (realistycznie)
-                    </p>
-                    <p className="text-2xl font-bold text-gray-900">
-                      {formatCurrency(data.pensionWithSickRealistic)}
-                    </p>
-                    <p className="text-xs text-gray-500">
-                      z uwzględnieniem inflacji
-                    </p>
-                  </div>
+                  {data.pensionWithSickRealistic && (
+                    <div className="space-y-2">
+                      <p className="text-sm font-medium text-gray-600">
+                        Z uwzględnieniem chorobowych
+                      </p>
+                      <p className="text-2xl font-bold text-gray-900">
+                        {formatCurrency(data.pensionWithSick)}
+                      </p>
+                      <p className="text-xs text-gray-500">miesięcznie</p>
+                    </div>
+                  )}
+                  {data.pensionWithSickRealistic && (
+                    <div className="space-y-2">
+                      <p className="text-sm font-medium text-gray-600">
+                        Z uwzględnieniem chorobowych (realistycznie)
+                      </p>
+                      <p className="text-2xl font-bold text-gray-900">
+                        {formatCurrency(data.pensionWithSickRealistic)}
+                      </p>
+                      <p className="text-xs text-gray-500">
+                        z uwzględnieniem inflacji
+                      </p>
+                    </div>
+                  )}
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
                   <div className="space-y-2">
