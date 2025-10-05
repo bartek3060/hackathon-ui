@@ -31,6 +31,7 @@ type SickPeriod = { year: number; days: number };
 
 export default function SimulationDashboardPage() {
   const router = useRouter();
+  const [activeTab, setActiveTab] = useState<string>("configuration");
 
   const currentYear = new Date().getFullYear();
 
@@ -197,6 +198,8 @@ export default function SimulationDashboardPage() {
     };
     try {
       localStorage.setItem("simulation-dashboard", JSON.stringify(payload));
+      // Switch to analysis tab after successful save
+      setActiveTab("analysis");
     } catch {}
   };
 
@@ -250,7 +253,12 @@ export default function SimulationDashboardPage() {
           </div>
         </div>
 
-        <Tabs defaultValue="configuration" className="space-y-6">
+        <Tabs
+          value={activeTab}
+          onValueChange={setActiveTab}
+          defaultValue="configuration"
+          className="space-y-6"
+        >
           <TabsList className="grid w-full grid-cols-2 max-w-md">
             <TabsTrigger value="configuration">Konfiguracja</TabsTrigger>
             <TabsTrigger value="analysis">Analiza i wykresy</TabsTrigger>
