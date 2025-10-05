@@ -9,9 +9,7 @@ interface Step4ReviewProps {
   control: Control<SimulationFormInterface>;
 }
 
-export function Step4Review({
-  control,
-}: Step4ReviewProps) {
+export function Step4Review({ control }: Step4ReviewProps) {
   const formData = useWatch({ control }) as SimulationFormInterface;
 
   return (
@@ -31,7 +29,7 @@ export function Step4Review({
               <div className="flex justify-between">
                 <span className="text-sm text-muted-foreground">Płeć:</span>
                 <span className="text-sm font-medium">
-                  {formData.gender === "male" ? "Mężczyzna" : "Kobieta"}
+                  {formData.gender === "man" ? "Mężczyzna" : "Kobieta"}
                 </span>
               </div>
               <div className="flex justify-between">

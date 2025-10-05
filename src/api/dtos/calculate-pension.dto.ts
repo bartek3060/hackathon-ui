@@ -1,11 +1,12 @@
 export interface CalculatePensionDto {
-  age: number;
+  sessionId: string; // UUID as string
   gender: string;
-  birthDate: Date;
+  birthDate: string; // LocalDate as string (ISO format)
   grossSalary: number;
-  workStartYear: Date;
-  plannedWorkEndYear: Date;
-  amountOfMoneyInZusAccount?: number;
-  amountOfMoneyInZusSubAccount?: number;
+  workStartYear: string; // LocalDate as string (ISO format)
+  plannedWorkEndYear: string; // LocalDate as string (ISO format)
+  amountOfMoneyInZusAccount: number;
+  amountOfMoneyInZusSubAccount: number;
   includeSickLeave: boolean;
-};
+  postalCode: string;
+}
