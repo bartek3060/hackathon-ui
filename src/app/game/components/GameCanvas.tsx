@@ -302,15 +302,24 @@ export function GameCanvas({ shipTextureSrc = ASSETS.SHIP }: GameCanvasProps) {
 
     return () => {
       setIsAppReady(false);
-      app?.destroy(true, {
-        children: true,
-        texture: true,
-        textureSource: true,
-      });
+      if (app) {
+        try {
+          app.destroy(true, {
+            children: true,
+            texture: true,
+            textureSource: true,
+          });
+        } catch (error) {
+          console.warn("Error destroying PIXI app:", error);
+        }
+      }
       appRef.current = null;
       containerRef.current = null;
       shipSpriteRef.current = null;
       textElementsRef.current = [];
+      bulletPoolRef.current = [];
+      enemyPoolRef.current = [];
+      pickupPoolRef.current = [];
     };
   }, [shipTextureSrc]);
 
