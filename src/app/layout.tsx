@@ -16,9 +16,7 @@ export default function RootLayout({
     <html lang="pl">
       <QueryClientProvider client={queryClient}>
         <body>
-          <PageTransitionWrapper>
-            {children}
-          </PageTransitionWrapper>
+          <PageTransitionWrapper>{children}</PageTransitionWrapper>
           <Toaster position="top-right" richColors />
         </body>
       </QueryClientProvider>
