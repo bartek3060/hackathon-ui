@@ -4,6 +4,7 @@ import "./globals.css";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "sonner";
 import { PageTransitionWrapper } from "@/components/PageTransitionWrapper";
+import { ZofiaChatButton } from "@/components/ZofiaChatButton";
 
 export default function RootLayout({
   children,
@@ -20,6 +21,7 @@ export default function RootLayout({
             {children}
           </PageTransitionWrapper>
           <Toaster position="top-right" richColors />
+          <ZofiaChatButton />
         </body>
       </QueryClientProvider>
     </html>

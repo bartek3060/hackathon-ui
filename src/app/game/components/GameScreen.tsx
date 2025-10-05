@@ -13,6 +13,8 @@ export function GameScreen() {
   const { phase, level, start, pause, resume, reset } = useGameStore();
 
   useEffect(() => {
+    reset();
+
     const handleKeyDown = (e: KeyboardEvent) => {
       switch (e.code) {
         case "Space":
