@@ -61,7 +61,6 @@ export default function SimulationDashboardPage() {
   const [zusAccount, setZusAccount] = useState<number>(20000);
   const [zusSubAccount, setZusSubAccount] = useState<number>(8000);
 
-  // Basic simulation data (would come from simulation form in real app)
   const [simulationData] = useState({
     age: 35,
     gender: "man" as const,
@@ -70,15 +69,13 @@ export default function SimulationDashboardPage() {
     workEndYear: 2045,
   });
 
-  // Simple projection for ZUS growth preview (no external deps)
   const zusGrowthSeries = useMemo(() => {
     const years = 10;
-    const monthlyRate = 0.02 / 12; // 2% yearly interest equivalent
+    const monthlyRate = 0.02 / 12;
     const series: { year: number; account: number; subAccount: number }[] = [];
     let acc = zusAccount;
     let sub = zusSubAccount;
     for (let i = 0; i < years; i++) {
-      // simple compounding per year
       acc = acc * (1 + monthlyRate * 12);
       sub = sub * (1 + monthlyRate * 12);
       series.push({ year: currentYear + i, account: acc, subAccount: sub });
@@ -91,12 +88,10 @@ export default function SimulationDashboardPage() {
     1
   );
 
-  // Calculate detailed pension projections based on dashboard settings
   const detailedProjections = useMemo(() => {
     const workYears = simulationData.workEndYear - simulationData.workStartYear;
     const yearsToRetirement = simulationData.workEndYear - currentYear;
 
-    // Calculate average salary with past salaries and future projections
     const allSalaries = [
       ...pastSalaries.map((p) => ({ year: p.year, amount: p.amount })),
       { year: currentYear, amount: simulationData.grossSalary },
@@ -113,43 +108,36 @@ export default function SimulationDashboardPage() {
     const averageSalary =
       allSalaries.reduce((sum, s) => sum + s.amount, 0) / allSalaries.length;
 
-    // Calculate sick leave impact
     const totalSickDays = [...sickPast, ...sickFuture].reduce(
       (sum, s) => sum + s.days,
       0
     );
-    const sickLeaveReduction = (totalSickDays / (workYears * 365)) * 0.05; // 5% impact per day
+    const sickLeaveReduction = (totalSickDays / (workYears * 365)) * 0.05;
 
-    // Base pension calculation
     const basePension = averageSalary * 0.24 * (workYears / 40);
     const monthlyPension = Math.max(
       basePension * (1 - sickLeaveReduction),
       1200
     );
 
-    // Add ZUS capital impact
     const combinedZusCapital = includeZusFields
       ? zusAccount + zusSubAccount
       : 0;
-    const monthlyFromCapital = combinedZusCapital / 240; // 20-year annuity
+    const monthlyFromCapital = combinedZusCapital / 240;
 
     const finalMonthlyPension = monthlyPension + monthlyFromCapital;
 
-    // Inflation adjustment
     const inflationRate = 0.035;
     const realPension =
       finalMonthlyPension * Math.pow(1 - inflationRate, yearsToRetirement);
 
-    // Replacement rate
     const replacementRate = Math.min(
       (finalMonthlyPension / averageSalary) * 100,
       80
     );
 
-    // Total contributions
-    const totalContributions = averageSalary * 12 * workYears * 0.1976; // ZUS rate
+    const totalContributions = averageSalary * 12 * workYears * 0.1976;
 
-    // Future scenarios
     const pensionAfter1Year = finalMonthlyPension * 1.08;
     const pensionAfter2Years = finalMonthlyPension * 1.15;
     const pensionAfter5Years = finalMonthlyPension * 1.35;
@@ -183,7 +171,6 @@ export default function SimulationDashboardPage() {
   ]);
 
   const handleSave = () => {
-    // Persist to localStorage for now; API integration can be added later
     const payload = {
       pastSalaries,
       forecastMode,
@@ -201,7 +188,6 @@ export default function SimulationDashboardPage() {
   };
 
   useEffect(() => {
-    // Prefill from previous session
     try {
       const saved = localStorage.getItem("simulation-dashboard");
       if (saved) {
@@ -258,9 +244,7 @@ export default function SimulationDashboardPage() {
 
           <TabsContent value="configuration" className="space-y-6">
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-              {/* Left: Controls */}
               <div className="space-y-6">
-                {/* Past salaries */}
                 <Card>
                   <CardHeader>
                     <CardTitle className="flex items-center gap-2">
@@ -331,7 +315,6 @@ export default function SimulationDashboardPage() {
                   </CardContent>
                 </Card>
 
-                {/* Future forecasting */}
                 <Card>
                   <CardHeader>
                     <CardTitle className="flex items-center gap-2">
@@ -444,7 +427,6 @@ export default function SimulationDashboardPage() {
                   </CardContent>
                 </Card>
 
-                {/* Sickness periods */}
                 <Card>
                   <CardHeader>
                     <CardTitle className="flex items-center gap-2">
@@ -587,7 +569,6 @@ export default function SimulationDashboardPage() {
                   </CardContent>
                 </Card>
 
-                {/* Actions */}
                 <Card>
                   <CardContent className="pt-6">
                     <div className="flex items-center justify-between">
@@ -612,9 +593,7 @@ export default function SimulationDashboardPage() {
 
           <TabsContent value="analysis" className="space-y-6">
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-              {/* Left column */}
               <div className="space-y-6"></div>
-              {/* ZUS Growth Preview */}
               <Card>
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
@@ -626,7 +605,6 @@ export default function SimulationDashboardPage() {
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  {/* Inputs */}
                   <div className="grid grid-cols-2 gap-4 p-4 bg-gray-50 rounded-lg">
                     <div className="flex items-center gap-2">
                       <input
@@ -668,7 +646,6 @@ export default function SimulationDashboardPage() {
                     />
                   </div>
 
-                  {/* ZUS Growth Chart */}
                   <div className="h-56">
                     <ResponsiveContainer width="100%" height="100%">
                       <LineChart data={zusGrowthSeries}>
@@ -712,9 +689,7 @@ export default function SimulationDashboardPage() {
               </Card>
             </div>
 
-            {/* Right column */}
             <div className="space-y-6">
-              {/* Detailed Summary */}
               <Card>
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
@@ -726,7 +701,6 @@ export default function SimulationDashboardPage() {
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-6">
-                  {/* Main pension amounts */}
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="bg-white rounded-xl p-4 border border-gray-200">
                       <h3 className="text-sm font-medium text-gray-600 mb-2">
@@ -756,7 +730,6 @@ export default function SimulationDashboardPage() {
                     </div>
                   </div>
 
-                  {/* Key metrics */}
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                     <div className="bg-white rounded-xl p-4 border border-gray-200 text-center">
                       <p className="text-sm text-gray-600 mb-1">
@@ -796,7 +769,6 @@ export default function SimulationDashboardPage() {
                     </div>
                   </div>
 
-                  {/* Future scenarios */}
                   <div className="bg-white rounded-xl p-4 border border-gray-200">
                     <h3 className="text-sm font-medium text-gray-600 mb-3">
                       Scenariusze przyszłości
@@ -838,7 +810,6 @@ export default function SimulationDashboardPage() {
                     </div>
                   </div>
 
-                  {/* Impact analysis */}
                   <div className="bg-white rounded-xl p-4 border border-gray-200">
                     <h3 className="text-sm font-medium text-gray-600 mb-3">
                       Analiza wpływu
@@ -888,7 +859,6 @@ export default function SimulationDashboardPage() {
                 </CardContent>
               </Card>
 
-              {/* Charts Section */}
               <Card>
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
@@ -900,7 +870,6 @@ export default function SimulationDashboardPage() {
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-6">
-                  {/* Salary progression chart */}
                   <div>
                     <h4 className="text-sm font-medium text-gray-600 mb-3">
                       Progresja wynagrodzeń
@@ -978,7 +947,6 @@ export default function SimulationDashboardPage() {
                     </div>
                   </div>
 
-                  {/* Sickness duration chart */}
                   <div className="bg-gradient-to-br from-red-50 to-orange-50 rounded-xl p-4 border border-red-100">
                     <div className="flex items-center justify-between mb-4">
                       <h4 className="text-lg font-semibold text-gray-800 flex items-center gap-2">
@@ -1098,7 +1066,6 @@ export default function SimulationDashboardPage() {
                     </div>
                   </div>
 
-                  {/* Future salaries chart */}
                   <div className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-xl p-4 border border-blue-100">
                     <div className="flex items-center justify-between mb-4">
                       <h4 className="text-lg font-semibold text-gray-800 flex items-center gap-2">

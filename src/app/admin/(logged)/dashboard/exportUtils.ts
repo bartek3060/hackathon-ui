@@ -2,7 +2,6 @@ import { ReceiveAdminReportDto } from "@/api/dtos/receive-admin-report.dto";
 import { SimulatorUsage } from "./types";
 
 export function exportToCSV(data: ReceiveAdminReportDto[]) {
-  // Calculate comprehensive statistics
   const stats = {
     totalUsage: data.length,
     avgExpectedPension: Math.round(
@@ -47,7 +46,6 @@ export function exportToCSV(data: ReceiveAdminReportDto[]) {
     uniqueDates: [...new Set(data.map((item) => item.createdAt))].length,
   };
 
-  // Create CSV content with summary section
   const summarySection = [
     "=== PODSUMOWANIE DANYCH SYMULATORA EMERYTURY ===",
     "",
@@ -130,7 +128,6 @@ export function exportToCSV(data: ReceiveAdminReportDto[]) {
     "\n"
   );
 
-  // Create and download file
   const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
   const link = document.createElement("a");
   const url = URL.createObjectURL(blob);
