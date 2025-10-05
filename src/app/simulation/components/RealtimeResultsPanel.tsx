@@ -24,7 +24,7 @@ export function RealtimeResultsPanel({
   };
 
   const formatPercentage = (value: number) => {
-    return `${value.toFixed(1)}%`;
+    return `${(value * 100).toFixed(2)}%`;
   };
 
   if (isLoading) {
