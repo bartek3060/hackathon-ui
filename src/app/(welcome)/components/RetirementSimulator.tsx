@@ -6,6 +6,7 @@ import { HeroSection } from "./HeroSection";
 import { PensionInputForm } from "./PensionInputForm";
 import { HeroImage } from "./HeroImage";
 import { PensionGroupsChart } from "./PensionGroupsChart";
+import { GameBanner } from "./GameBanner";
 import { usePensionGroups } from "@/hooks/queries/usePensionGroups";
 import { FactsModule } from "@/components/FactsModule";
 
@@ -28,21 +29,22 @@ export function RetirementSimulator() {
 
   return (
     <div className="min-h-screen bg-white">
-      <div className="absolute top-8 left-8 z-10">
-        <a 
-          href="https://www.zus.pl/" 
-          target="_blank" 
+      <div className="absolute top-8 left-8 z-10 flex items-center gap-6">
+        <a
+          href="https://www.zus.pl/"
+          target="_blank"
           rel="noopener noreferrer"
           className="block hover:opacity-80 transition-opacity"
         >
-          <img 
-            src="/logo.svg" 
-            alt="ZUS Logo" 
-            className="h-12 w-auto"
-          />
+          <img src="/logo.svg" alt="ZUS Logo" className="h-12 w-auto" />
         </a>
+
+        {/* Game Banner - positioned next to logo */}
+        <div className="w-96 max-w-md ml-6">
+          <GameBanner />
+        </div>
       </div>
-      
+
       <div className="grid grid-cols-2 min-h-screen">
         <div className="bg-white flex items-center justify-center p-12">
           <div className="max-w-xl space-y-8">
@@ -50,7 +52,7 @@ export function RetirementSimulator() {
             <PensionInputForm onSubmit={handleSubmit} isLoading={isLoading} />
           </div>
         </div>
-        
+
         <div className="relative h-screen overflow-hidden">
           <AnimatePresence mode="wait">
             {viewState === "chart" && pensionData ? (
@@ -88,11 +90,10 @@ export function RetirementSimulator() {
       </div>
 
       {/* Facts Module - shows on left side when chart appears */}
-      <FactsModule 
-        trigger={showFact && viewState === "chart"} 
+      <FactsModule
+        trigger={showFact && viewState === "chart"}
         onDismiss={() => setShowFact(false)}
       />
     </div>
   );
 }
-

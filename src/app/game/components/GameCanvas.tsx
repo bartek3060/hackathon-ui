@@ -62,9 +62,11 @@ export function GameCanvas({ shipTextureSrc = ASSETS.SHIP }: GameCanvasProps) {
   const gainLife = useGameStore((state) => state.gainLife);
   const updateMultiplier = useGameStore((state) => state.updateMultiplier);
   const incrementHits = useGameStore((state) => state.incrementHits);
-  const incrementEnemiesDestroyed = useGameStore((state) => state.incrementEnemiesDestroyed);
+  const incrementEnemiesDestroyed = useGameStore(
+    (state) => state.incrementEnemiesDestroyed
+  );
   const incrementPickups = useGameStore((state) => state.incrementPickups);
-  
+
   const [isAppReady, setIsAppReady] = useState(false);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const appRef = useRef<PIXI.Application | null>(null);
@@ -75,21 +77,21 @@ export function GameCanvas({ shipTextureSrc = ASSETS.SHIP }: GameCanvasProps) {
   const particlesContainerRef = useRef<PIXI.Container | null>(null);
   const shipSpriteRef = useRef<PIXI.Sprite | null>(null);
   const textElementsRef = useRef<PIXI.Text[]>([]);
-  
+
   const playerPosRef = useRef({ x: 400, y: 1050 });
   const keysPressed = useRef<Set<string>>(new Set());
   const elapsedTimeRef = useRef(0);
   const invulnerableUntilRef = useRef(0);
-  
+
   const bulletPoolRef = useRef<PooledBullet[]>([]);
   const lastFireTimeRef = useRef(0);
-  
+
   const enemyPoolRef = useRef<PooledEnemy[]>([]);
   const lastEnemySpawnRef = useRef(0);
-  
+
   const pickupPoolRef = useRef<PooledPickup[]>([]);
   const lastPickupSpawnRef = useRef(0);
-  
+
   const particlePoolRef = useRef<Particle[]>([]);
 
   useEffect(() => {
@@ -122,10 +124,10 @@ export function GameCanvas({ shipTextureSrc = ASSETS.SHIP }: GameCanvasProps) {
       for (let i = 0; i < bulletPoolSize; i++) {
         const bulletGraphic = new PIXI.Graphics();
         bulletGraphic.circle(0, 0, GAME_CONFIG.BULLET.SIZE / 2);
-        bulletGraphic.fill(0xFFFF00);
+        bulletGraphic.fill(0xffff00);
         bulletGraphic.visible = false;
         bulletsContainer.addChild(bulletGraphic);
-        
+
         bulletPoolRef.current.push({
           sprite: bulletGraphic,
           active: false,
@@ -151,7 +153,7 @@ export function GameCanvas({ shipTextureSrc = ASSETS.SHIP }: GameCanvasProps) {
         graphics.fill(ASSETS.FALLBACK.ENEMY);
         enemyTexture = app.renderer.generateTexture(graphics);
       }
-      
+
       for (let i = 0; i < enemyPoolSize; i++) {
         const enemySprite = new PIXI.Sprite(enemyTexture);
         enemySprite.anchor.set(0.5);
@@ -159,7 +161,7 @@ export function GameCanvas({ shipTextureSrc = ASSETS.SHIP }: GameCanvasProps) {
         enemySprite.height = GAME_CONFIG.ENEMY.SIZE;
         enemySprite.visible = false;
         enemiesContainer.addChild(enemySprite);
-        
+
         enemyPoolRef.current.push({
           sprite: enemySprite,
           active: false,
@@ -178,7 +180,7 @@ export function GameCanvas({ shipTextureSrc = ASSETS.SHIP }: GameCanvasProps) {
       let coinTexture: PIXI.Texture;
       let healthTexture: PIXI.Texture;
       let educationTexture: PIXI.Texture;
-      
+
       try {
         coinTexture = await PIXI.Assets.load(ASSETS.COIN);
       } catch (error) {
@@ -188,7 +190,7 @@ export function GameCanvas({ shipTextureSrc = ASSETS.SHIP }: GameCanvasProps) {
         graphics.fill(ASSETS.FALLBACK.COIN);
         coinTexture = app.renderer.generateTexture(graphics);
       }
-      
+
       try {
         healthTexture = await PIXI.Assets.load(ASSETS.HEALTH);
       } catch (error) {
@@ -198,7 +200,7 @@ export function GameCanvas({ shipTextureSrc = ASSETS.SHIP }: GameCanvasProps) {
         graphics.fill(ASSETS.FALLBACK.HEALTH);
         healthTexture = app.renderer.generateTexture(graphics);
       }
-      
+
       try {
         educationTexture = await PIXI.Assets.load(ASSETS.EDUCATION);
       } catch (error) {
@@ -217,7 +219,7 @@ export function GameCanvas({ shipTextureSrc = ASSETS.SHIP }: GameCanvasProps) {
         pickupSprite.height = GAME_CONFIG.PICKUP.SIZE;
         pickupSprite.visible = false;
         pickupsContainer.addChild(pickupSprite);
-        
+
         pickupPoolRef.current.push({
           sprite: pickupSprite,
           active: false,
@@ -229,7 +231,11 @@ export function GameCanvas({ shipTextureSrc = ASSETS.SHIP }: GameCanvasProps) {
         });
       }
 
-      (window as any).pickupTextures = { coinTexture, healthTexture, educationTexture };
+      (window as any).pickupTextures = {
+        coinTexture,
+        healthTexture,
+        educationTexture,
+      };
 
       const particlesContainer = new PIXI.Container();
       particlesContainerRef.current = particlesContainer;
@@ -239,10 +245,10 @@ export function GameCanvas({ shipTextureSrc = ASSETS.SHIP }: GameCanvasProps) {
       for (let i = 0; i < particlePoolSize; i++) {
         const particleGraphic = new PIXI.Graphics();
         particleGraphic.circle(0, 0, 3);
-        particleGraphic.fill(0xFFFFFF);
+        particleGraphic.fill(0xffffff);
         particleGraphic.visible = false;
         particlesContainer.addChild(particleGraphic);
-        
+
         particlePoolRef.current.push({
           sprite: particleGraphic,
           active: false,
@@ -261,7 +267,10 @@ export function GameCanvas({ shipTextureSrc = ASSETS.SHIP }: GameCanvasProps) {
         shipSprite.anchor.set(0.5);
         shipSprite.width = GAME_CONFIG.PLAYER.SIZE;
         shipSprite.height = GAME_CONFIG.PLAYER.SIZE;
-        playerPosRef.current = { x: app.screen.width / 2, y: app.screen.height - 150 };
+        playerPosRef.current = {
+          x: app.screen.width / 2,
+          y: app.screen.height - 150,
+        };
         shipSprite.x = playerPosRef.current.x;
         shipSprite.y = playerPosRef.current.y;
         shipSpriteRef.current = shipSprite;
@@ -274,7 +283,10 @@ export function GameCanvas({ shipTextureSrc = ASSETS.SHIP }: GameCanvasProps) {
         const texture = app.renderer.generateTexture(graphics);
         const shipSprite = new PIXI.Sprite(texture);
         shipSprite.anchor.set(0.5);
-        playerPosRef.current = { x: app.screen.width / 2, y: app.screen.height - 150 };
+        playerPosRef.current = {
+          x: app.screen.width / 2,
+          y: app.screen.height - 150,
+        };
         shipSprite.x = playerPosRef.current.x;
         shipSprite.y = playerPosRef.current.y;
         shipSpriteRef.current = shipSprite;
@@ -290,7 +302,11 @@ export function GameCanvas({ shipTextureSrc = ASSETS.SHIP }: GameCanvasProps) {
 
     return () => {
       setIsAppReady(false);
-      app.destroy(true, { children: true, texture: true, textureSource: true });
+      app?.destroy(true, {
+        children: true,
+        texture: true,
+        textureSource: true,
+      });
       appRef.current = null;
       containerRef.current = null;
       shipSpriteRef.current = null;
@@ -320,7 +336,7 @@ export function GameCanvas({ shipTextureSrc = ASSETS.SHIP }: GameCanvasProps) {
   useEffect(() => {
     if (!isAppReady || !containerRef.current || !appRef.current) return;
 
-    textElementsRef.current.forEach(text => text.destroy());
+    textElementsRef.current.forEach((text) => text.destroy());
     textElementsRef.current = [];
 
     if (shipSpriteRef.current) {
@@ -328,33 +344,36 @@ export function GameCanvas({ shipTextureSrc = ASSETS.SHIP }: GameCanvasProps) {
     }
 
     if (phase === "playing" && appRef.current && shipSpriteRef.current) {
-      playerPosRef.current = { x: appRef.current.screen.width / 2, y: appRef.current.screen.height - 150 };
+      playerPosRef.current = {
+        x: appRef.current.screen.width / 2,
+        y: appRef.current.screen.height - 150,
+      };
       elapsedTimeRef.current = 0;
       lastFireTimeRef.current = 0;
       lastEnemySpawnRef.current = 0;
       lastPickupSpawnRef.current = 0;
       invulnerableUntilRef.current = 0;
-      
+
       for (const bullet of bulletPoolRef.current) {
         bullet.active = false;
         bullet.sprite.visible = false;
       }
-      
+
       for (const enemy of enemyPoolRef.current) {
         enemy.active = false;
         enemy.sprite.visible = false;
       }
-      
+
       for (const pickup of pickupPoolRef.current) {
         pickup.active = false;
         pickup.sprite.visible = false;
       }
-      
+
       for (const particle of particlePoolRef.current) {
         particle.active = false;
         particle.sprite.visible = false;
       }
-      
+
       shipSpriteRef.current.x = playerPosRef.current.x;
       shipSpriteRef.current.y = playerPosRef.current.y;
     }
@@ -377,12 +396,10 @@ export function GameCanvas({ shipTextureSrc = ASSETS.SHIP }: GameCanvasProps) {
         particle.sprite.visible = false;
       }
     }
-
   }, [phase, isAppReady]);
 
-
   const spawnBullet = (x: number, y: number) => {
-    const bullet = bulletPoolRef.current.find(b => !b.active);
+    const bullet = bulletPoolRef.current.find((b) => !b.active);
     if (!bullet) return;
 
     bullet.active = true;
@@ -390,11 +407,11 @@ export function GameCanvas({ shipTextureSrc = ASSETS.SHIP }: GameCanvasProps) {
     bullet.y = y - 20;
     bullet.vx = 0;
     bullet.vy = -GAME_CONFIG.BULLET.SPEED;
-    
+
     bullet.sprite.visible = true;
     bullet.sprite.x = bullet.x;
     bullet.sprite.y = bullet.y;
-    
+
     incrementShots();
     audioManager.play("shoot");
   };
@@ -417,29 +434,32 @@ export function GameCanvas({ shipTextureSrc = ASSETS.SHIP }: GameCanvasProps) {
   };
 
   const getCurrentTier = () => {
-    const tier = Math.floor(elapsedTimeRef.current / GAME_CONFIG.DIFFICULTY.TIER_DURATION);
+    const tier = Math.floor(
+      elapsedTimeRef.current / GAME_CONFIG.DIFFICULTY.TIER_DURATION
+    );
     return Math.min(tier, GAME_CONFIG.DIFFICULTY.MAX_TIER);
   };
 
   const spawnEnemy = () => {
     if (!appRef.current) return;
-    
-    const activeCount = enemyPoolRef.current.filter(e => e.active).length;
+
+    const activeCount = enemyPoolRef.current.filter((e) => e.active).length;
     if (activeCount >= GAME_CONFIG.ENEMY.MAX_ACTIVE) return;
 
-    const enemy = enemyPoolRef.current.find(e => !e.active);
+    const enemy = enemyPoolRef.current.find((e) => !e.active);
     if (!enemy) return;
 
     const tier = getCurrentTier();
     const tierConfig = GAME_CONFIG.SPAWN_RATES[tier];
 
     const padding = GAME_CONFIG.ENEMY.SIZE;
-    enemy.x = padding + Math.random() * (appRef.current.screen.width - padding * 2);
+    enemy.x =
+      padding + Math.random() * (appRef.current.screen.width - padding * 2);
     enemy.y = -GAME_CONFIG.ENEMY.SIZE;
-    
+
     enemy.vx = (Math.random() - 0.5) * 50;
     enemy.vy = GAME_CONFIG.ENEMY.BASE_SPEED * tierConfig.speedMultiplier;
-    
+
     enemy.active = true;
     enemy.sprite.visible = true;
     enemy.sprite.x = enemy.x;
@@ -448,14 +468,18 @@ export function GameCanvas({ shipTextureSrc = ASSETS.SHIP }: GameCanvasProps) {
 
   const updateEnemies = (dt: number) => {
     if (!appRef.current) return;
-    
+
     for (const enemy of enemyPoolRef.current) {
       if (!enemy.active) continue;
 
       enemy.x += enemy.vx * dt;
       enemy.y += enemy.vy * dt;
 
-      if (enemy.y > appRef.current.screen.height + 50 || enemy.x < -50 || enemy.x > appRef.current.screen.width + 50) {
+      if (
+        enemy.y > appRef.current.screen.height + 50 ||
+        enemy.x < -50 ||
+        enemy.x > appRef.current.screen.width + 50
+      ) {
         enemy.active = false;
         enemy.sprite.visible = false;
       } else {
@@ -467,11 +491,11 @@ export function GameCanvas({ shipTextureSrc = ASSETS.SHIP }: GameCanvasProps) {
 
   const spawnPickup = () => {
     if (!appRef.current) return;
-    
-    const activeCount = pickupPoolRef.current.filter(p => p.active).length;
+
+    const activeCount = pickupPoolRef.current.filter((p) => p.active).length;
     if (activeCount >= GAME_CONFIG.PICKUP.MAX_ACTIVE) return;
 
-    const pickup = pickupPoolRef.current.find(p => !p.active);
+    const pickup = pickupPoolRef.current.find((p) => !p.active);
     if (!pickup) return;
 
     const textures = (window as any).pickupTextures;
@@ -490,10 +514,11 @@ export function GameCanvas({ shipTextureSrc = ASSETS.SHIP }: GameCanvasProps) {
     }
 
     const padding = GAME_CONFIG.PICKUP.SIZE;
-    pickup.x = padding + Math.random() * (appRef.current.screen.width - padding * 2);
+    pickup.x =
+      padding + Math.random() * (appRef.current.screen.width - padding * 2);
     pickup.y = -GAME_CONFIG.PICKUP.SIZE;
     pickup.vy = GAME_CONFIG.PICKUP.SPEED;
-    
+
     pickup.active = true;
     pickup.sprite.visible = true;
     pickup.sprite.x = pickup.x;
@@ -502,7 +527,7 @@ export function GameCanvas({ shipTextureSrc = ASSETS.SHIP }: GameCanvasProps) {
 
   const updatePickups = (dt: number) => {
     if (!appRef.current) return;
-    
+
     for (const pickup of pickupPoolRef.current) {
       if (!pickup.active) continue;
 
@@ -518,12 +543,16 @@ export function GameCanvas({ shipTextureSrc = ASSETS.SHIP }: GameCanvasProps) {
   };
 
   const checkAABB = (
-    x1: number, y1: number, size1: number,
-    x2: number, y2: number, size2: number
+    x1: number,
+    y1: number,
+    size1: number,
+    x2: number,
+    y2: number,
+    size2: number
   ): boolean => {
     const halfSize1 = size1 / 2;
     const halfSize2 = size2 / 2;
-    
+
     return (
       x1 - halfSize1 < x2 + halfSize2 &&
       x1 + halfSize1 > x2 - halfSize2 &&
@@ -535,21 +564,21 @@ export function GameCanvas({ shipTextureSrc = ASSETS.SHIP }: GameCanvasProps) {
   const createExplosion = (x: number, y: number, color: number) => {
     const particleCount = GAME_CONFIG.PARTICLES.EXPLOSION_COUNT;
     let spawned = 0;
-    
+
     for (const particle of particlePoolRef.current) {
       if (spawned >= particleCount) break;
       if (particle.active) continue;
-      
+
       const angle = (Math.PI * 2 * spawned) / particleCount;
       const speed = GAME_CONFIG.PARTICLES.SPEED;
-      
+
       particle.active = true;
       particle.x = x;
       particle.y = y;
       particle.vx = Math.cos(angle) * speed;
       particle.vy = Math.sin(angle) * speed;
       particle.life = particle.maxLife;
-      
+
       particle.sprite.clear();
       particle.sprite.circle(0, 0, 3);
       particle.sprite.fill(color);
@@ -557,7 +586,7 @@ export function GameCanvas({ shipTextureSrc = ASSETS.SHIP }: GameCanvasProps) {
       particle.sprite.x = x;
       particle.sprite.y = y;
       particle.sprite.alpha = 1;
-      
+
       spawned++;
     }
   };
@@ -565,15 +594,15 @@ export function GameCanvas({ shipTextureSrc = ASSETS.SHIP }: GameCanvasProps) {
   const updateParticles = (dt: number) => {
     for (const particle of particlePoolRef.current) {
       if (!particle.active) continue;
-      
+
       particle.x += particle.vx * dt;
       particle.y += particle.vy * dt;
       particle.life -= dt;
-      
+
       particle.sprite.x = particle.x;
       particle.sprite.y = particle.y;
       particle.sprite.alpha = Math.max(0, particle.life / particle.maxLife);
-      
+
       if (particle.life <= 0) {
         particle.active = false;
         particle.sprite.visible = false;
@@ -584,46 +613,65 @@ export function GameCanvas({ shipTextureSrc = ASSETS.SHIP }: GameCanvasProps) {
   const checkCollisions = () => {
     const currentMultiplier = useGameStore.getState().multiplier;
     const currentLives = useGameStore.getState().lives;
-    
+
     for (const bullet of bulletPoolRef.current) {
       if (!bullet.active) continue;
-      
+
       for (const enemy of enemyPoolRef.current) {
         if (!enemy.active) continue;
-        
-        if (checkAABB(bullet.x, bullet.y, GAME_CONFIG.BULLET.SIZE,
-                      enemy.x, enemy.y, enemy.size)) {
-          
+
+        if (
+          checkAABB(
+            bullet.x,
+            bullet.y,
+            GAME_CONFIG.BULLET.SIZE,
+            enemy.x,
+            enemy.y,
+            enemy.size
+          )
+        ) {
           bullet.active = false;
           bullet.sprite.visible = false;
           enemy.active = false;
           enemy.sprite.visible = false;
-          
-          const points = Math.floor(GAME_CONFIG.ENEMY.POINTS * currentMultiplier);
+
+          const points = Math.floor(
+            GAME_CONFIG.ENEMY.POINTS * currentMultiplier
+          );
           addScore(points);
           incrementHits();
           incrementEnemiesDestroyed();
           audioManager.play("hit");
-          
+
           createExplosion(enemy.x, enemy.y, ASSETS.FALLBACK.ENEMY);
           break;
         }
       }
     }
-    
+
     for (const pickup of pickupPoolRef.current) {
       if (!pickup.active) continue;
-      
-      if (checkAABB(playerPosRef.current.x, playerPosRef.current.y, GAME_CONFIG.PLAYER.SIZE,
-                    pickup.x, pickup.y, pickup.size)) {
+
+      if (
+        checkAABB(
+          playerPosRef.current.x,
+          playerPosRef.current.y,
+          GAME_CONFIG.PLAYER.SIZE,
+          pickup.x,
+          pickup.y,
+          pickup.size
+        )
+      ) {
         pickup.active = false;
         pickup.sprite.visible = false;
         incrementPickups();
         audioManager.play("pickup");
-        
+
         switch (pickup.type) {
           case "coin":
-            const coinPoints = Math.floor(GAME_CONFIG.PICKUP.COIN_POINTS * currentMultiplier);
+            const coinPoints = Math.floor(
+              GAME_CONFIG.PICKUP.COIN_POINTS * currentMultiplier
+            );
             addScore(coinPoints);
             createExplosion(pickup.x, pickup.y, ASSETS.FALLBACK.COIN);
             break;
@@ -634,31 +682,43 @@ export function GameCanvas({ shipTextureSrc = ASSETS.SHIP }: GameCanvasProps) {
             createExplosion(pickup.x, pickup.y, ASSETS.FALLBACK.HEALTH);
             break;
           case "education":
-            const newMultiplier = Math.min(currentMultiplier + GAME_CONFIG.PICKUP.EDU_MULTIPLIER, GAME_CONFIG.SCORE.MAX_MULTIPLIER);
+            const newMultiplier = Math.min(
+              currentMultiplier + GAME_CONFIG.PICKUP.EDU_MULTIPLIER,
+              GAME_CONFIG.SCORE.MAX_MULTIPLIER
+            );
             updateMultiplier(newMultiplier);
             createExplosion(pickup.x, pickup.y, ASSETS.FALLBACK.EDUCATION);
             break;
         }
       }
     }
-    
+
     const now = elapsedTimeRef.current;
     const isInvulnerable = now < invulnerableUntilRef.current;
-    
+
     if (!isInvulnerable) {
       for (const enemy of enemyPoolRef.current) {
         if (!enemy.active) continue;
-        
-        if (checkAABB(playerPosRef.current.x, playerPosRef.current.y, GAME_CONFIG.PLAYER.SIZE,
-                      enemy.x, enemy.y, enemy.size)) {
+
+        if (
+          checkAABB(
+            playerPosRef.current.x,
+            playerPosRef.current.y,
+            GAME_CONFIG.PLAYER.SIZE,
+            enemy.x,
+            enemy.y,
+            enemy.size
+          )
+        ) {
           enemy.active = false;
           enemy.sprite.visible = false;
-          
+
           loseLife();
-          createExplosion(enemy.x, enemy.y, 0xFF0000);
-          
-          invulnerableUntilRef.current = now + GAME_CONFIG.PLAYER.INVULNERABLE_TIME;
-          
+          createExplosion(enemy.x, enemy.y, 0xff0000);
+
+          invulnerableUntilRef.current =
+            now + GAME_CONFIG.PLAYER.INVULNERABLE_TIME;
+
           break;
         }
       }
@@ -667,7 +727,7 @@ export function GameCanvas({ shipTextureSrc = ASSETS.SHIP }: GameCanvasProps) {
 
   const updateGame = (deltaTime: number) => {
     const currentPhase = useGameStore.getState().phase;
-    
+
     if (currentPhase !== "playing" || !shipSpriteRef.current) return;
 
     const dt = Math.min(deltaTime, GAME_CONFIG.MAX_DELTA_TIME / 1000);
@@ -677,10 +737,16 @@ export function GameCanvas({ shipTextureSrc = ASSETS.SHIP }: GameCanvasProps) {
 
     let dx = 0;
 
-    if (keysPressed.current.has("ArrowLeft") || keysPressed.current.has("KeyA")) {
+    if (
+      keysPressed.current.has("ArrowLeft") ||
+      keysPressed.current.has("KeyA")
+    ) {
       dx -= 1;
     }
-    if (keysPressed.current.has("ArrowRight") || keysPressed.current.has("KeyD")) {
+    if (
+      keysPressed.current.has("ArrowRight") ||
+      keysPressed.current.has("KeyD")
+    ) {
       dx += 1;
     }
 
@@ -690,7 +756,10 @@ export function GameCanvas({ shipTextureSrc = ASSETS.SHIP }: GameCanvasProps) {
     const edgePadding = 20;
 
     if (appRef.current) {
-      playerPosRef.current.x = Math.max(edgePadding, Math.min(appRef.current.screen.width - edgePadding, newX));
+      playerPosRef.current.x = Math.max(
+        edgePadding,
+        Math.min(appRef.current.screen.width - edgePadding, newX)
+      );
     }
 
     shipSpriteRef.current.x = playerPosRef.current.x;
@@ -709,7 +778,7 @@ export function GameCanvas({ shipTextureSrc = ASSETS.SHIP }: GameCanvasProps) {
     if (keysPressed.current.has("Space")) {
       const now = elapsedTimeRef.current;
       const fireRate = GAME_CONFIG.PLAYER.FIRE_RATE;
-      
+
       if (now - lastFireTimeRef.current >= fireRate) {
         spawnBullet(playerPosRef.current.x, playerPosRef.current.y);
         lastFireTimeRef.current = now;
@@ -719,12 +788,18 @@ export function GameCanvas({ shipTextureSrc = ASSETS.SHIP }: GameCanvasProps) {
     const tier = getCurrentTier();
     const tierConfig = GAME_CONFIG.SPAWN_RATES[tier];
 
-    if (elapsedTimeRef.current - lastEnemySpawnRef.current >= tierConfig.enemyInterval) {
+    if (
+      elapsedTimeRef.current - lastEnemySpawnRef.current >=
+      tierConfig.enemyInterval
+    ) {
       spawnEnemy();
       lastEnemySpawnRef.current = elapsedTimeRef.current;
     }
 
-    if (elapsedTimeRef.current - lastPickupSpawnRef.current >= tierConfig.pickupInterval) {
+    if (
+      elapsedTimeRef.current - lastPickupSpawnRef.current >=
+      tierConfig.pickupInterval
+    ) {
       spawnPickup();
       lastPickupSpawnRef.current = elapsedTimeRef.current;
     }
@@ -733,21 +808,20 @@ export function GameCanvas({ shipTextureSrc = ASSETS.SHIP }: GameCanvasProps) {
     updateEnemies(dt);
     updatePickups(dt);
     updateParticles(dt);
-    
+
     checkCollisions();
   };
 
   return (
     <div className="absolute inset-0 bg-gradient-to-b from-gray-900 via-blue-900 to-black">
-      <canvas 
-        ref={canvasRef} 
+      <canvas
+        ref={canvasRef}
         className="w-full h-full"
         style={{
           opacity: isAppReady ? 1 : 0,
-          transition: 'opacity 0.5s ease-in-out'
+          transition: "opacity 0.5s ease-in-out",
         }}
       />
     </div>
   );
 }
-

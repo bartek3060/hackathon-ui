@@ -78,5 +78,3 @@ export interface DifficultyTier {
   pickupInterval: number;
   speedMultiplier: number;
 }
-
-
